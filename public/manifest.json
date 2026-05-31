@@ -1,0 +1,17 @@
+{
+  "name": "Prognosticos Mundial 2026",
+  "short_name": "Mundial 2026",
+  "description": "Jogo privado de prognosticos do Mundial 2026 entre amigos.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

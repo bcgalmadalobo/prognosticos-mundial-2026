@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow read: if owns(userId) || isAdmin();
+      // Users are now created server-side via Admin SDK — client create is blocked
+      allow create: if false;
+      allow update: if owns(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["role", "approved", "totalPoints", "inviteCode"]);
+      allow delete: if isAdmin();
+    }
+
+    match /invites/{inviteId} {
+      // Only admins can read or create invites from the client
+      allow read: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.used == false
+        && request.resource.data.code is string
+        && request.resource.data.expectedName is string
+        && request.resource.data.expectedEmail is string;
+      // Updates (marking as used) are done exclusively by the server-side API via Admin SDK
+      allow update, delete: if false;
+    }
+
+    match /teams/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /groups/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /matches/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /scoringSettings/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /appSettings/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /leaderboard/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /initialPredictions/{id} {
+      allow read: if owns(resource.data.userId) || isAdmin();
+      allow create: if owns(request.resource.data.userId)
+        && request.resource.data.locked == true;
+      allow update: if isAdmin()
+        || (owns(resource.data.userId)
+          && resource.data.locked != true
+          && request.resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /matchPredictions/{id} {
+      allow read: if owns(resource.data.userId) || isAdmin();
+      allow create: if owns(request.resource.data.userId)
+        && get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.status == "open";
+      allow update: if isAdmin()
+        || (owns(resource.data.userId)
+          && resource.data.locked != true
+          && get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.status == "open");
+      allow delete: if isAdmin();
+    }
+  }
+}
