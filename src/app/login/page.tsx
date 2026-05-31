@@ -89,7 +89,7 @@ export default function LoginPage() {
           </Button>
         </form>
         <button
-          className="mt-4 text-sm text-brand-700"
+          className="mt-4 text-sm text-neon-400"
           onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
         >
           {mode === "login" ? "Ainda nao tenho conta" : "Ja tenho conta"}

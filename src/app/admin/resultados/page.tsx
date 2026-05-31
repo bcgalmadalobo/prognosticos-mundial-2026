@@ -153,12 +153,12 @@ export default function ResultadosPage() {
       <main className="mx-auto max-w-4xl space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Resultados reais do torneio</h1>
-          <a href="/admin" className="text-sm text-brand-700">
+          <a href="/admin" className="text-sm text-neon-400">
             ← Admin
           </a>
         </div>
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-pitch-300">
           Preenche os campos à medida que o torneio avança. Campos vazios não pontuam.
           Os ids das equipas devem coincidir com os usados nas apostas (ex: <code>portugal</code>).
         </p>
@@ -171,7 +171,7 @@ export default function ResultadosPage() {
             <div className="grid gap-3 md:grid-cols-3">
               {GROUP_IDS.map((g) => (
                 <div key={g}>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">
+                  <label className="mb-1 block text-xs font-semibold text-pitch-200">
                     Grupo {g}
                   </label>
                   <input
@@ -197,7 +197,7 @@ export default function ResultadosPage() {
                 ] as { label: string; value: string; set: (v: string) => void }[]
               ).map(({ label, value, set }) => (
                 <div key={label}>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-200">{label}</label>
                   <input
                     className="w-full rounded-xl border p-2 text-sm"
                     placeholder="ex: portugal, espanha, brasil, ..."
@@ -220,7 +220,7 @@ export default function ResultadosPage() {
                 ] as { label: string; value: string; set: (v: string) => void }[]
               ).map(({ label, value, set }) => (
                 <div key={label}>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-200">{label}</label>
                   <input
                     className="w-full rounded-xl border p-3"
                     placeholder="id da equipa"
@@ -243,7 +243,7 @@ export default function ResultadosPage() {
                 ] as { label: string; value: string; set: (v: string) => void }[]
               ).map(({ label, value, set }) => (
                 <div key={label}>
-                  <label className="mb-1 block text-xs font-semibold text-slate-600">{label}</label>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-200">{label}</label>
                   <input
                     className="w-full rounded-xl border p-3"
                     placeholder="nome do jogador"
@@ -259,7 +259,7 @@ export default function ResultadosPage() {
         </form>
 
         <Card title="Calcular pontos da aposta inicial">
-          <p className="mb-3 text-sm text-slate-600">
+          <p className="mb-3 text-sm text-pitch-200">
             Guarda os resultados acima primeiro. Depois clica aqui para recalcular os pontos de todas
             as apostas iniciais submetidas. Os knockoutPoints existentes são preservados.
           </p>

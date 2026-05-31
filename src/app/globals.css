@@ -2,15 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── CSS custom properties ─────────────────────────────────────────── */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+
+  --color-bg:        #0d1117;
+  --color-surface:   #161b22;
+  --color-surface-2: #21262d;
+  --color-border:    #30363d;
+  --color-text:      #f0f6fc;
+  --color-muted:     #8b949e;
+  --color-brand:     #22c55e;
+  --color-gold:      #fbbf24;
 }
 
+/* ── Base ──────────────────────────────────────────────────────────── */
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-input, textarea, select {
-  font-size: 16px;
+/* ── Inputs, textareas, selects ────────────────────────────────────── */
+input,
+textarea,
+select {
+  font-size: 16px; /* prevent iOS zoom */
+  background-color: var(--color-surface-2);
+  color: var(--color-text);
+  border-color: var(--color-border);
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+/* ── Custom scrollbar (Chromium) ───────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+
+/* ── Selection ─────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(34, 197, 94, 0.25);
+  color: var(--color-text);
+}
+

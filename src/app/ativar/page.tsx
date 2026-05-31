@@ -58,7 +58,7 @@ export default function AtivarPage() {
   return (
     <main className="mx-auto max-w-md p-4 pt-10">
       <Card title="Ativar conta">
-        <p className="mb-4 text-sm text-slate-600">
+        <p className="mb-4 text-sm text-pitch-200">
           A tua conta foi criada com sucesso. Aguarda que o organizador te envie o teu
           codigo de acesso e introduz-o aqui para entrar na app.
         </p>
@@ -79,7 +79,7 @@ export default function AtivarPage() {
             {busy ? "A ativar..." : "Ativar conta"}
           </Button>
         </form>
-        <button className="mt-4 text-sm text-brand-700" onClick={handleLogout}>
+        <button className="mt-4 text-sm text-neon-400" onClick={handleLogout}>
           Sair
         </button>
       </Card>

@@ -68,7 +68,7 @@ export default function ConvitesPage() {
       <main className="mx-auto max-w-4xl space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Convites</h1>
-          <a href="/admin" className="text-sm text-brand-700">← Admin</a>
+          <a href="/admin" className="text-sm text-neon-400">← Admin</a>
         </div>
 
         {error && (
@@ -77,7 +77,7 @@ export default function ConvitesPage() {
 
         <Card title={`Utilizadores pendentes (${pendingUsers.length})`}>
           {pendingUsers.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum utilizador pendente de ativacao.</p>
+            <p className="text-sm text-pitch-300">Nenhum utilizador pendente de ativacao.</p>
           ) : (
             <div className="space-y-3">
               {pendingUsers.map((u) => (
@@ -86,8 +86,8 @@ export default function ConvitesPage() {
                   className="grid grid-cols-1 gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm md:grid-cols-4"
                 >
                   <div className="md:col-span-1">
-                    <p className="font-semibold">{u.name}</p>
-                    <p className="truncate text-slate-500">{u.email}</p>
+                    <p className="font-semibold text-amber-900">{u.name}</p>
+                    <p className="truncate text-amber-800">{u.email}</p>
                   </div>
                   <div className="flex items-center md:col-span-1">
                     {generatedCodes[u.uid] ? (
@@ -95,7 +95,7 @@ export default function ConvitesPage() {
                         {generatedCodes[u.uid]}
                       </span>
                     ) : (
-                      <span className="text-xs text-slate-400">Sem codigo gerado</span>
+                      <span className="text-xs text-amber-700">Sem codigo gerado</span>
                     )}
                   </div>
                   <div className="flex gap-2 md:col-span-2">
@@ -119,10 +119,10 @@ export default function ConvitesPage() {
 
         <Card title={`Historico de activacoes (${invites.length})`}>
           {invites.length === 0 ? (
-            <p className="text-sm text-slate-500">Nenhum convite ainda.</p>
+            <p className="text-sm text-pitch-300">Nenhum convite ainda.</p>
           ) : (
             <div className="space-y-2">
-              <div className="hidden grid-cols-5 gap-2 text-xs font-semibold text-slate-500 md:grid">
+              <div className="hidden grid-cols-5 gap-2 text-xs font-semibold text-pitch-300 md:grid">
                 <span>Codigo</span>
                 <span>Nome</span>
                 <span>Email</span>
@@ -134,10 +134,10 @@ export default function ConvitesPage() {
                   key={inv.id}
                   className={`grid grid-cols-2 gap-2 rounded-xl border p-3 text-sm md:grid-cols-5 ${inv.used ? "border-slate-200 bg-slate-50" : "border-green-200 bg-green-50"}`}
                 >
-                  <span className="font-mono font-bold tracking-widest">{inv.code}</span>
+                  <span className="font-mono font-bold tracking-widest text-slate-900">{inv.code}</span>
                   <span className="text-slate-700">{inv.expectedName}</span>
-                  <span className="truncate text-slate-500">{inv.expectedEmail}</span>
-                  <span className={inv.used ? "text-slate-400" : "font-semibold text-green-700"}>
+                  <span className="truncate text-slate-600">{inv.expectedEmail}</span>
+                  <span className={inv.used ? "text-slate-500" : "font-semibold text-green-700"}>
                     {inv.used ? "Usado" : "Disponivel"}
                   </span>
                   <Button onClick={() => copyCode(inv.code)} disabled={inv.used}>

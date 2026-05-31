@@ -120,11 +120,11 @@ export function BracketView({ state, onChoice }: Props) {
   return (
     <div className="mt-8">
       <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neon-500">
           Passo 3 de 4
         </p>
-        <h2 className="text-xl font-bold text-slate-900">Bracket</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-xl font-bold text-pitch-50">Bracket</h2>
+        <p className="mt-1 text-sm text-pitch-300">
           Clica no vencedor de cada jogo. As escolhas propagam-se automaticamente para as rondas seguintes.
         </p>
       </div>
@@ -141,7 +141,7 @@ export function BracketView({ state, onChoice }: Props) {
               <h3
                 className={[
                   "mb-3 text-xs font-bold uppercase tracking-wider",
-                  isFinal ? "text-amber-600" : "text-slate-600",
+                  isFinal ? "text-amber-500" : "text-pitch-300",
                 ].join(" ")}
               >
                 {ROUND_LABELS[round]}

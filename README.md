@@ -229,3 +229,36 @@ FIREBASE_ADMIN_PRIVATE_KEY
 The `FIREBASE_ADMIN_PRIVATE_KEY` value must include literal `\n` characters as they appear in the downloaded JSON (the app replaces them at runtime).
 
 > **Security**: never commit `.env.local` or any Firebase service account JSON to the repository.
+
+## Design — Fase 5A (Design System Global)
+
+Redesign visual global implementado como fundação para as fases seguintes.
+
+**Paleta**
+
+| Token | Valor | Uso |
+|---|---|---|
+| `pitch-950` | `#0d1117` | Fundo base da app |
+| `pitch-800` | `#161b22` | Superfície de cards |
+| `pitch-700` | `#21262d` | Hover/elevado |
+| `pitch-500` | `#30363d` | Bordas e separadores |
+| `neon-500` / `brand-500` | `#22c55e` | Verde principal |
+| `gold-400` | `#fbbf24` | Dourado (destaques/admin) |
+
+**Ficheiros alterados**
+
+| Ficheiro | O que mudou |
+|---|---|
+| `tailwind.config.ts` | Paleta `pitch`, `gold`, `neon`, gradientes, sombras, `font-sans` |
+| `src/app/globals.css` | Tema escuro, CSS vars, inputs escuros, scrollbar custom, readability bridge |
+| `src/app/layout.tsx` | Fonte Inter via `next/font`, `pb-16 md:pb-0` para bottom nav |
+| `src/components/NavBar.tsx` | Navbar escura + bottom navigation mobile com ícones |
+| `src/components/Button.tsx` | 5 variantes: `primary`, `secondary`, `ghost`, `danger`, `gold` |
+| `src/components/Card.tsx` | Card escuro com prop `accent` (brand/gold/none) |
+
+**Navbar**
+- Desktop: barra topo com logo, links e botão de logout.
+- Mobile: barra topo minimalista (logo + admin + logout) + bottom navigation fixo com 5 ícones.
+
+**Compatibilidade retroativa**
+O `globals.css` inclui um "readability bridge" que remapeia classes `text-slate-*` para equivalentes legíveis no tema escuro, sem tocar nas páginas ainda não redesenhadas. Este bloco pode ser removido após a Fase 5E.

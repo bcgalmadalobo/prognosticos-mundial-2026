@@ -100,10 +100,10 @@ export default function PontuacaoPage() {
       <main className="mx-auto max-w-4xl space-y-4 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Editor de pontuação</h1>
-          <a href="/admin" className="text-sm text-brand-700">← Admin</a>
+          <a href="/admin" className="text-sm text-neon-400">← Admin</a>
         </div>
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-pitch-300">
           Edita os pontos atribuídos por cada tipo de acerto. Clica em{" "}
           <strong>Guardar pontuação</strong> para persistir. O recálculo de{" "}
           <a href="/admin/resultados" className="underline">resultados</a> vai usar estes valores.
@@ -116,7 +116,7 @@ export default function PontuacaoPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {INITIAL_FIELDS.map(({ key, label }) => (
               <div key={key}>
-                <label className="mb-1 block text-xs font-semibold text-slate-600">
+                <label className="mb-1 block text-xs font-semibold text-pitch-200">
                   {label}
                 </label>
                 <div className="flex items-center gap-2">
@@ -128,7 +128,7 @@ export default function PontuacaoPage() {
                     value={settings.initial[key]}
                     onChange={(e) => setInitial(key, e.target.value)}
                   />
-                  <span className="text-xs text-slate-400">pts</span>
+                  <span className="text-xs text-pitch-300">pts</span>
                 </div>
               </div>
             ))}
@@ -139,7 +139,7 @@ export default function PontuacaoPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-xs font-semibold text-slate-500">
+                <tr className="border-b border-pitch-500 text-left text-xs font-semibold text-pitch-300">
                   <th className="pb-2 pr-4">Ronda</th>
                   <th className="pb-2 pr-4">Mult. odds</th>
                   <th className="pb-2 pr-4">Equipa qualificada (pts)</th>
@@ -188,7 +188,7 @@ export default function PontuacaoPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-pitch-300">
             Mult. odds: pontos = odd × multiplicador (ex: odd 2.1 × mult 2 = 4.2 pts).
             Resultado exato aplica-se apenas a partir dos quartos.
           </p>
@@ -201,7 +201,7 @@ export default function PontuacaoPage() {
           <button
             type="button"
             onClick={handleReset}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            className="rounded-xl border border-pitch-500 px-4 py-2 text-sm font-semibold text-pitch-200 hover:bg-pitch-700"
           >
             Repor defaults
           </button>

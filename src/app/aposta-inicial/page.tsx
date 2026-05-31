@@ -190,7 +190,7 @@ function PredictionSummary({
         </div>
       ) : (
         <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50 p-5">
-          <p className="text-base font-bold text-brand-800">Aposta guardada</p>
+          <p className="text-base font-bold text-brand-900">Aposta guardada</p>
           <p className="mt-1 text-sm text-brand-700">
             Podes editar a tua aposta até{" "}
             <strong>{deadlineDisplay}</strong>.
@@ -572,7 +572,7 @@ export default function ApostaInicialPage() {
   if (loadingPrediction) {
     return (
       <Protected>
-        <main className="p-6 text-sm text-slate-400">A carregar...</main>
+        <main className="p-6 text-sm text-pitch-300">A carregar...</main>
       </Protected>
     );
   }
@@ -636,18 +636,18 @@ export default function ApostaInicialPage() {
 
         {/* Page header */}
         <div className="mb-1">
-          <p className="text-xs font-semibold uppercase tracking-widest text-brand-600">
+          <p className="text-xs font-semibold uppercase tracking-widest text-neon-500">
             Passo 1 de 4
           </p>
-          <h1 className="text-2xl font-bold text-slate-900">Fase de Grupos</h1>
+          <h1 className="text-2xl font-bold text-pitch-50">Fase de Grupos</h1>
         </div>
-        <p className="mb-5 text-sm text-slate-500">
+        <p className="mb-5 text-sm text-pitch-300">
           Arrasta as equipas para prever a classificação final de cada grupo.
         </p>
 
         {/* Draft status bar */}
         <div className="mb-5 flex items-center justify-between gap-4">
-          <span className="text-xs text-slate-400">{savedLabel}</span>
+          <span className="text-xs text-pitch-300">{savedLabel}</span>
           <Button
             type="button"
             onClick={handleManualSave}
@@ -680,20 +680,20 @@ export default function ApostaInicialPage() {
         <BracketView state={bracketState} onChoice={handleBracketChoice} />
 
         {/* Step 4: Individual awards */}
-        <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-brand-600">
+        <section className="mt-8 rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-neon-500">
             Passo 4 de 4
           </p>
-          <h2 className="mb-1 text-xl font-bold text-slate-900">
+          <h2 className="mb-1 text-xl font-bold text-pitch-50">
             Prémios Individuais
           </h2>
-          <p className="mb-5 text-sm text-slate-500">
+          <p className="mb-5 text-sm text-pitch-300">
             Escreve o nome do jogador que acreditas que vai ganhar cada prémio.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {AWARD_FIELDS.map(({ key, label, placeholder }) => (
               <div key={key}>
-                <label className="mb-1 block text-xs font-semibold text-slate-700">
+                <label className="mb-1 block text-xs font-semibold text-pitch-200">
                   {label}
                 </label>
                 <input
@@ -701,7 +701,7 @@ export default function ApostaInicialPage() {
                   value={awards[key]}
                   onChange={(e) => handleAwardChange(key, e.target.value)}
                   placeholder={placeholder}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-lg border border-pitch-500 px-3 py-2 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
                 />
               </div>
             ))}
@@ -734,7 +734,7 @@ export default function ApostaInicialPage() {
             </Button>
           ) : (
             <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
-              <h3 className="mb-1 text-sm font-bold text-brand-800">
+              <h3 className="mb-1 text-sm font-bold text-brand-900">
                 {existingPrediction ? "Confirmar alterações" : "Confirmar aposta"}
               </h3>
               <p className="mb-4 text-xs text-brand-700">

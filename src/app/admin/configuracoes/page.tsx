@@ -71,14 +71,14 @@ export default function ConfiguracoesPage() {
     <Protected adminOnly>
       <main className="mx-auto max-w-2xl space-y-4 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900">Configurações</h1>
-          <a href="/admin" className="text-sm text-brand-700">
+          <h1 className="text-2xl font-bold text-pitch-50">Configurações</h1>
+          <a href="/admin" className="text-sm text-neon-400">
             ← Admin
           </a>
         </div>
 
         {loading ? (
-          <p className="text-sm text-slate-400">A carregar...</p>
+          <p className="text-sm text-pitch-300">A carregar...</p>
         ) : (
           <form onSubmit={handleSave} className="space-y-4">
             {message && (
@@ -95,7 +95,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setCompetitionName(e.target.value)}
                 placeholder="Ex: Prognósticos Mundial 2026"
                 maxLength={120}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
               />
             </Card>
 
@@ -104,12 +104,12 @@ export default function ConfiguracoesPage() {
                 <select
                   value={predictionStatus}
                   onChange={(e) => setPredictionStatus(e.target.value as "open" | "closed")}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
                 >
                   <option value="open">Aberta — deadline controla o prazo</option>
                   <option value="closed">Fechada — bloqueia submissões imediatamente</option>
                 </select>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-pitch-300">
                   "Fechada" sobrepõe-se à deadline: rejeita todas as submissões independentemente da data.
                 </p>
               </div>
@@ -122,15 +122,15 @@ export default function ConfiguracoesPage() {
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                   placeholder="2026-06-11T18:00:00.000Z"
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 font-mono text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 font-mono text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-pitch-300">
                   Formato ISO UTC. Portugal continental (verão, UTC+1):{" "}
-                  <code className="rounded bg-slate-100 px-1">2026-06-11T18:00:00.000Z</code>{" "}
+                  <code className="rounded bg-pitch-700 px-1">2026-06-11T18:00:00.000Z</code>{" "}
                   corresponde a 11/06/2026 às 19:00.
                 </p>
                 {deadline && isValidIsoDate(deadline) && (
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-pitch-300">
                     Data reconhecida:{" "}
                     {new Date(deadline).toLocaleString("pt-PT", {
                       dateStyle: "short",
@@ -151,9 +151,9 @@ export default function ConfiguracoesPage() {
                   placeholder="Mensagem opcional mostrada aos participantes no dashboard."
                   rows={3}
                   maxLength={500}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
                 />
-                <p className="text-right text-xs text-slate-400">
+                <p className="text-right text-xs text-pitch-300">
                   {welcomeMessage.length}/500
                 </p>
               </div>

@@ -153,7 +153,7 @@ export default function AdminPage() {
   return (
     <Protected adminOnly>
       <main className="mx-auto max-w-4xl space-y-8 p-4">
-        <h1 className="text-2xl font-bold text-slate-900">Painel Admin</h1>
+        <h1 className="text-2xl font-bold text-pitch-50">Painel Admin</h1>
 
         {/* Navigation grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -161,10 +161,10 @@ export default function AdminPage() {
             <a
               key={card.href}
               href={card.href}
-              className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-brand-300 hover:shadow-md"
+              className="block rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card transition-all hover:border-neon-500/50 hover:shadow-glow"
             >
-              <h2 className="font-bold text-slate-900">{card.title}</h2>
-              <p className="mt-1 text-sm text-slate-500">{card.description}</p>
+              <h2 className="font-bold text-pitch-50">{card.title}</h2>
+              <p className="mt-1 text-sm text-pitch-300">{card.description}</p>
             </a>
           ))}
         </div>
@@ -179,7 +179,7 @@ export default function AdminPage() {
 
         {/* Secondary tools */}
         <div>
-          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-pitch-300">
             Ferramentas
           </h2>
           <div className="space-y-4">
@@ -296,7 +296,7 @@ export default function AdminPage() {
                 />
                 <Button>Guardar resultado</Button>
               </form>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-pitch-200">
                 Nos oitavos e 16-avos, podes deixar o resultado 120 min vazio. Nos quartos, meias e final,
                 preenche se quiseres pontuar resultado exato após prolongamento.
               </p>

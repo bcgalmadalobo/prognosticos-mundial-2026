@@ -115,7 +115,7 @@ export default function MatchesPage() {
               <Button>Guardar aposta</Button>
 
               {saved === match.id ? (
-                <p className="text-sm text-brand-700">Guardado.</p>
+                <p className="text-sm text-neon-400">Guardado.</p>
               ) : null}
             </form>
           </Card>
