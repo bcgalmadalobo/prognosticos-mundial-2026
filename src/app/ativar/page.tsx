@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
@@ -57,6 +58,18 @@ export default function AtivarPage() {
 
   return (
     <main className="mx-auto max-w-md p-4 pt-10">
+      <div className="mb-6 flex flex-col items-center gap-2">
+        <Image
+          src="/worldcup-logo.png.png"
+          alt="Logo da competição"
+          width={80}
+          height={80}
+          className="h-16 w-auto max-w-[80px] object-contain"
+        />
+        <p className="text-sm font-semibold text-pitch-200 tracking-wide">
+          Prognósticos Mundial 2026
+        </p>
+      </div>
       <Card title="Ativar conta">
         <p className="mb-4 text-sm text-pitch-200">
           A tua conta foi criada com sucesso. Aguarda que o organizador te envie o teu

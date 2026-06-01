@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -44,7 +45,13 @@ export function NavBar() {
             href="/dashboard"
             className="flex items-center gap-2 text-lg font-bold tracking-tight text-pitch-50 transition-opacity hover:opacity-80"
           >
-            <span className="text-2xl">⚽</span>
+            <Image
+              src="/worldcup-logo.png.png"
+              alt="Logo da competição"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-contain"
+            />
             <span>
               Prognósticos{" "}
               <span className="bg-brand-gradient bg-clip-text text-transparent">
@@ -111,7 +118,13 @@ export function NavBar() {
           href="/dashboard"
           className="flex items-center gap-2 font-bold tracking-tight text-pitch-50"
         >
-          <span className="text-xl">⚽</span>
+          <Image
+            src="/worldcup-logo.png.png"
+            alt="Logo da competição"
+            width={24}
+            height={24}
+            className="h-6 w-6 object-contain"
+          />
           <span className="text-sm">
             <span className="bg-brand-gradient bg-clip-text text-transparent">
               Mundial 2026
