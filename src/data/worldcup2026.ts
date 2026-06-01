@@ -1,85 +1,101 @@
-// TODO: ALL group assignments are PLACEHOLDER data.
-// Verify every team and group against the official FIFA World Cup 2026 draw.
-// Official draw: December 5, 2024 — check https://www.fifa.com/worldcup/2026
-
 export interface TeamData {
   name: string;
   flag: string;
+  shortName?: string;
+  group?: string;
+  fifaName?: string;
 }
 
-// TODO: Verify all entries against official FIFA 2026 qualification results.
+// Official FIFA World Cup 2026 draw — 48 teams, 12 groups of 4.
+// TODO: England (england) and Scotland (scotland) use Unicode subdivision flag tags
+// (🏴󠁧󠁢󠁥󠁮󠁧󠁿 / 🏴󠁧󠁢󠁳󠁣󠁴󠁿). If rendering breaks, replace with SVG flag assets.
 export const TEAMS: Record<string, TeamData> = {
-  // UEFA
-  germany:      { name: "Alemanha",       flag: "🇩🇪" },
-  france:       { name: "França",          flag: "🇫🇷" },
-  spain:        { name: "Espanha",         flag: "🇪🇸" },
-  portugal:     { name: "Portugal",        flag: "🇵🇹" },
-  england:      { name: "Inglaterra",      flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  netherlands:  { name: "Países Baixos",   flag: "🇳🇱" },
-  belgium:      { name: "Bélgica",         flag: "🇧🇪" },
-  italy:        { name: "Itália",          flag: "🇮🇹" },
-  switzerland:  { name: "Suíça",           flag: "🇨🇭" },
-  croatia:      { name: "Croácia",         flag: "🇭🇷" },
-  austria:      { name: "Áustria",         flag: "🇦🇹" },
-  serbia:       { name: "Sérvia",          flag: "🇷🇸" },
-  poland:       { name: "Polónia",         flag: "🇵🇱" },
-  denmark:      { name: "Dinamarca",       flag: "🇩🇰" },
-  turkey:       { name: "Turquia",         flag: "🇹🇷" },
-  scotland:     { name: "Escócia",         flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  // CONMEBOL
-  argentina:    { name: "Argentina",       flag: "🇦🇷" },
-  brazil:       { name: "Brasil",          flag: "🇧🇷" },
-  uruguay:      { name: "Uruguai",         flag: "🇺🇾" },
-  colombia:     { name: "Colômbia",        flag: "🇨🇴" },
-  ecuador:      { name: "Equador",         flag: "🇪🇨" },
-  venezuela:    { name: "Venezuela",       flag: "🇻🇪" },
-  chile:        { name: "Chile",           flag: "🇨🇱" },
-  // CONCACAF
-  usa:          { name: "EUA",             flag: "🇺🇸" },
-  mexico:       { name: "México",          flag: "🇲🇽" },
-  canada:       { name: "Canadá",          flag: "🇨🇦" },
-  panama:       { name: "Panamá",          flag: "🇵🇦" },
-  honduras:     { name: "Honduras",        flag: "🇭🇳" },
-  costa_rica:   { name: "Costa Rica",      flag: "🇨🇷" },
-  // AFC
-  japan:        { name: "Japão",           flag: "🇯🇵" },
-  south_korea:  { name: "Coreia do Sul",   flag: "🇰🇷" },
-  iran:         { name: "Irão",            flag: "🇮🇷" },
-  australia:    { name: "Austrália",       flag: "🇦🇺" },
-  saudi_arabia: { name: "Arábia Saudita",  flag: "🇸🇦" },
-  qatar:        { name: "Catar",           flag: "🇶🇦" },
-  uzbekistan:   { name: "Usbequistão",     flag: "🇺🇿" },
-  iraq:         { name: "Iraque",          flag: "🇮🇶" },
-  indonesia:    { name: "Indonésia",       flag: "🇮🇩" },
-  // CAF
-  morocco:      { name: "Marrocos",        flag: "🇲🇦" },
-  senegal:      { name: "Senegal",         flag: "🇸🇳" },
-  nigeria:      { name: "Nigéria",         flag: "🇳🇬" },
-  cameroon:     { name: "Camarões",        flag: "🇨🇲" },
-  egypt:        { name: "Egito",           flag: "🇪🇬" },
-  ivory_coast:  { name: "Costa do Marfim", flag: "🇨🇮" },
-  south_africa: { name: "África do Sul",   flag: "🇿🇦" },
-  dr_congo:     { name: "RD Congo",        flag: "🇨🇩" },
-  mali:         { name: "Mali",            flag: "🇲🇱" },
-  // OFC
-  new_zealand:  { name: "Nova Zelândia",   flag: "🇳🇿" },
+  // Group A
+  mexico:            { name: "México",              flag: "🇲🇽", group: "A" },
+  south_africa:      { name: "África do Sul",       flag: "🇿🇦", group: "A" },
+  south_korea:       { name: "Coreia do Sul",       flag: "🇰🇷", group: "A", fifaName: "Korea Republic" },
+  czechia:           { name: "Chéquia",             flag: "🇨🇿", group: "A", fifaName: "Czechia" },
+
+  // Group B
+  canada:            { name: "Canadá",              flag: "🇨🇦", group: "B" },
+  bosnia_herzegovina:{ name: "Bósnia e Herzegovina",flag: "🇧🇦", group: "B", shortName: "Bósnia", fifaName: "Bosnia and Herzegovina" },
+  qatar:             { name: "Qatar",               flag: "🇶🇦", group: "B" },
+  switzerland:       { name: "Suíça",               flag: "🇨🇭", group: "B" },
+
+  // Group C
+  brazil:            { name: "Brasil",              flag: "🇧🇷", group: "C" },
+  morocco:           { name: "Marrocos",            flag: "🇲🇦", group: "C" },
+  haiti:             { name: "Haiti",               flag: "🇭🇹", group: "C" },
+  scotland:          { name: "Escócia",             flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "C" },
+
+  // Group D
+  usa:               { name: "Estados Unidos",      flag: "🇺🇸", group: "D", fifaName: "USA" },
+  paraguay:          { name: "Paraguai",            flag: "🇵🇾", group: "D" },
+  australia:         { name: "Austrália",           flag: "🇦🇺", group: "D" },
+  turkey:            { name: "Turquia",             flag: "🇹🇷", group: "D", fifaName: "Türkiye" },
+
+  // Group E
+  germany:           { name: "Alemanha",            flag: "🇩🇪", group: "E" },
+  curacao:           { name: "Curaçau",             flag: "🇨🇼", group: "E", fifaName: "Curaçao" },
+  ivory_coast:       { name: "Costa do Marfim",     flag: "🇨🇮", group: "E", shortName: "Costa Marfim", fifaName: "Côte d'Ivoire" },
+  ecuador:           { name: "Equador",             flag: "🇪🇨", group: "E" },
+
+  // Group F
+  netherlands:       { name: "Países Baixos",       flag: "🇳🇱", group: "F", shortName: "P. Baixos" },
+  japan:             { name: "Japão",               flag: "🇯🇵", group: "F" },
+  sweden:            { name: "Suécia",              flag: "🇸🇪", group: "F" },
+  tunisia:           { name: "Tunísia",             flag: "🇹🇳", group: "F" },
+
+  // Group G
+  belgium:           { name: "Bélgica",             flag: "🇧🇪", group: "G" },
+  egypt:             { name: "Egito",               flag: "🇪🇬", group: "G" },
+  iran:              { name: "Irão",                flag: "🇮🇷", group: "G", fifaName: "IR Iran" },
+  new_zealand:       { name: "Nova Zelândia",       flag: "🇳🇿", group: "G" },
+
+  // Group H
+  spain:             { name: "Espanha",             flag: "🇪🇸", group: "H" },
+  cape_verde:        { name: "Cabo Verde",          flag: "🇨🇻", group: "H", fifaName: "Cabo Verde" },
+  saudi_arabia:      { name: "Arábia Saudita",      flag: "🇸🇦", group: "H", shortName: "Ar. Saudita" },
+  uruguay:           { name: "Uruguai",             flag: "🇺🇾", group: "H" },
+
+  // Group I
+  france:            { name: "França",              flag: "🇫🇷", group: "I" },
+  senegal:           { name: "Senegal",             flag: "🇸🇳", group: "I" },
+  iraq:              { name: "Iraque",              flag: "🇮🇶", group: "I" },
+  norway:            { name: "Noruega",             flag: "🇳🇴", group: "I" },
+
+  // Group J
+  argentina:         { name: "Argentina",           flag: "🇦🇷", group: "J" },
+  algeria:           { name: "Argélia",             flag: "🇩🇿", group: "J" },
+  austria:           { name: "Áustria",             flag: "🇦🇹", group: "J" },
+  jordan:            { name: "Jordânia",            flag: "🇯🇴", group: "J" },
+
+  // Group K
+  portugal:          { name: "Portugal",            flag: "🇵🇹", group: "K" },
+  dr_congo:          { name: "RD Congo",            flag: "🇨🇩", group: "K", fifaName: "DR Congo" },
+  uzbekistan:        { name: "Uzbequistão",         flag: "🇺🇿", group: "K" },
+  colombia:          { name: "Colômbia",            flag: "🇨🇴", group: "K" },
+
+  // Group L
+  england:           { name: "Inglaterra",          flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", group: "L" },
+  croatia:           { name: "Croácia",             flag: "🇭🇷", group: "L" },
+  ghana:             { name: "Gana",                flag: "🇬🇭", group: "L" },
+  panama:            { name: "Panamá",              flag: "🇵🇦", group: "L" },
 };
 
-// TODO: Replace every group below with the official FIFA 2026 draw result.
-// Each group must have exactly 4 team IDs matching keys in TEAMS above.
 export const GROUPS: Record<string, string[]> = {
-  A: ["usa",         "ecuador",     "ivory_coast", "japan"],
-  B: ["mexico",      "colombia",    "south_africa","australia"],
-  C: ["canada",      "venezuela",   "mali",        "south_korea"],
-  D: ["germany",     "brazil",      "morocco",     "indonesia"],
-  E: ["france",      "argentina",   "senegal",     "iran"],
-  F: ["spain",       "chile",       "nigeria",     "uzbekistan"],
-  G: ["england",     "uruguay",     "cameroon",    "saudi_arabia"],
-  H: ["portugal",    "panama",      "dr_congo",    "qatar"],
-  I: ["netherlands", "honduras",    "egypt",       "iraq"],
-  J: ["belgium",     "italy",       "switzerland", "costa_rica"],
-  K: ["croatia",     "austria",     "serbia",      "new_zealand"],
-  L: ["poland",      "denmark",     "turkey",      "scotland"],
+  A: ["mexico",       "south_africa", "south_korea",        "czechia"],
+  B: ["canada",       "bosnia_herzegovina", "qatar",         "switzerland"],
+  C: ["brazil",       "morocco",      "haiti",              "scotland"],
+  D: ["usa",          "paraguay",     "australia",          "turkey"],
+  E: ["germany",      "curacao",      "ivory_coast",        "ecuador"],
+  F: ["netherlands",  "japan",        "sweden",             "tunisia"],
+  G: ["belgium",      "egypt",        "iran",               "new_zealand"],
+  H: ["spain",        "cape_verde",   "saudi_arabia",       "uruguay"],
+  I: ["france",       "senegal",      "iraq",               "norway"],
+  J: ["argentina",    "algeria",      "austria",            "jordan"],
+  K: ["portugal",     "dr_congo",     "uzbekistan",         "colombia"],
+  L: ["england",      "croatia",      "ghana",              "panama"],
 };
 
 export const GROUP_LETTERS = ["A","B","C","D","E","F","G","H","I","J","K","L"] as const;

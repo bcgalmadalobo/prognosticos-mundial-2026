@@ -2,6 +2,8 @@
 
 A low-cost PWA for a private World Cup 2026 prediction game among friends.
 
+> **Dados das seleções atualizados para os grupos finais do Mundial 2026** (48 equipas, 12 grupos oficiais).
+
 This starter includes:
 
 - Next.js + TypeScript + Tailwind
