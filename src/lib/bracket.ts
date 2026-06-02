@@ -1,16 +1,13 @@
 // Pure bracket logic — no Firestore calls, no side effects.
 //
-// TODO [OFICIAL]: Os slots de terceiros classificados (tipo "3rd") indicam os grupos
-// dos quais o terceiro pode ser alocado, conforme o bracket FIFA 2026.
-// A função resolveThirdPlaceSlot escolhe o primeiro terceiro disponível cujo grupo
-// está na lista allowedGroups. Se a FIFA publicar uma matriz de alocação mais
-// específica (que determine uma correspondência exata entre slots e terceiros),
-// substituir o corpo dessa função.
-//
+// Third-place slot resolution uses a static lookup table (src/data/thirdPlaceAllocation.ts).
+// The table covers all C(12,8)=495 combinations of 8 qualified third-place groups.
 // TODO [OFICIAL]: Os emparelhamentos dos oitavos (M89–M96) foram derivados por ordem
 // sequencial dos 16-avos (M73/M74→M89, M75/M76→M90, …). Verificar contra o bracket
 // oficial FIFA quando disponível.
 
+import { getThirdPlaceAssignment, THIRD_PLACE_SLOT_IDS } from "@/data/thirdPlaceAllocation";
+import type { ThirdPlaceMatchId } from "@/data/thirdPlaceAllocation";
 import { GROUP_LETTERS, TEAMS } from "@/data/worldcup2026";
 import type {
   BracketMatchState,
@@ -100,40 +97,19 @@ function slotLabel(slot: SlotDef): string {
   switch (slot.type) {
     case "1st":    return `1.º Gr. ${slot.group}`;
     case "2nd":    return `2.º Gr. ${slot.group}`;
-    case "3rd":    return `3.º ${slot.allowedGroups.join("/")}`;
+    case "3rd":    return "Por resolver";
     case "winner": return `Venc. ${slot.matchId}`;
     case "loser":  return `Perd. ${slot.matchId}`;
   }
-}
-
-// ── Third-place slot resolution ───────────────────────────────────────────────
-
-// TODO [OFICIAL]: Replace this function body if FIFA publishes a specific
-// allocation matrix that maps exact third-place slots to specific qualified thirds.
-function resolveThirdPlaceSlot(
-  allowedGroups: string[],
-  qualifiedThirds: string[],
-  groupOf: Record<string, string>,
-  usedThirds: Set<string>,
-): string | null {
-  for (const teamId of qualifiedThirds) {
-    const group = groupOf[teamId];
-    if (group && allowedGroups.includes(group) && !usedThirds.has(teamId)) {
-      usedThirds.add(teamId);
-      return teamId;
-    }
-  }
-  return null;
 }
 
 // ── Individual slot resolution ────────────────────────────────────────────────
 
 function resolveSlot(
   slot: SlotDef,
+  matchId: string,
   groupOrders: Record<string, string[]>,
-  qualifiedThirds: string[],
-  groupOf: Record<string, string>,
-  usedThirds: Set<string>,
+  thirdAssignment: Record<string, string | null>,
   resolved: Record<string, BracketMatchState>,
 ): string | null {
   switch (slot.type) {
@@ -142,7 +118,7 @@ function resolveSlot(
     case "2nd":
       return groupOrders[slot.group]?.[1] ?? null;
     case "3rd":
-      return resolveThirdPlaceSlot(slot.allowedGroups, qualifiedThirds, groupOf, usedThirds);
+      return thirdAssignment[matchId] ?? null;
     case "winner": {
       const match = resolved[slot.matchId];
       return match?.winnerId ?? null;
@@ -170,12 +146,36 @@ export function resolveBracket(
   });
 
   const qualifiedThirds = thirdPlaceRanking.slice(0, 8);
-  const usedThirds = new Set<string>();
+  const qualifiedGroups = qualifiedThirds
+    .map((t) => groupOf[t])
+    .filter((g): g is string => !!g);
+
+  // Pre-compute third-place assignment via static lookup (no greedy/matching at runtime)
+  const thirdAssignment: Record<string, string | null> = {};
+  let thirdAssignmentError = false;
+
+  if (qualifiedGroups.length === 8) {
+    try {
+      const assignment = getThirdPlaceAssignment(qualifiedGroups);
+      const groupToTeam: Record<string, string> = {};
+      for (const teamId of qualifiedThirds) {
+        const group = groupOf[teamId];
+        if (group) groupToTeam[group] = teamId;
+      }
+      for (const slotId of THIRD_PLACE_SLOT_IDS) {
+        const group = assignment[slotId as ThirdPlaceMatchId];
+        thirdAssignment[slotId] = groupToTeam[group] ?? null;
+      }
+    } catch {
+      thirdAssignmentError = true;
+    }
+  }
+
   const resolved: Record<string, BracketMatchState> = {};
 
   for (const tmpl of BRACKET_TEMPLATE) {
-    const teamA = resolveSlot(tmpl.slotA, groupOrders, qualifiedThirds, groupOf, usedThirds, resolved);
-    const teamB = resolveSlot(tmpl.slotB, groupOrders, qualifiedThirds, groupOf, usedThirds, resolved);
+    const teamA = resolveSlot(tmpl.slotA, tmpl.id, groupOrders, thirdAssignment, resolved);
+    const teamB = resolveSlot(tmpl.slotB, tmpl.id, groupOrders, thirdAssignment, resolved);
 
     // Validate stored winner: if the chosen team is no longer in this match, treat as null
     const stored = bracketChoices[tmpl.id] ?? null;
@@ -192,7 +192,7 @@ export function resolveBracket(
     };
   }
 
-  return { matches: resolved };
+  return { matches: resolved, thirdAssignmentError };
 }
 
 // ── applyChoice ───────────────────────────────────────────────────────────────

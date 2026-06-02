@@ -453,6 +453,8 @@ export default function ApostaInicialPage() {
       errs.push("Os 12 terceiros classificados devem estar definidos.");
     if (thirdPlaceRanking.slice(0, 8).length !== 8)
       errs.push("Os 8 melhores terceiros devem estar definidos.");
+    if (bracketState.thirdAssignmentError)
+      errs.push("Combinação de terceiros classificados inválida. Verifica o ranking dos terceiros.");
     if (derived.roundOf32Teams.length !== 32)
       errs.push("Bracket incompleto — 16-avos.");
     if (derived.roundOf16Teams.length !== 16)
@@ -475,7 +477,7 @@ export default function ApostaInicialPage() {
       errs.push("Melhor guarda-redes em falta.");
 
     return errs;
-  }, [groupOrders, thirdPlaceRanking, derived, awards]);
+  }, [groupOrders, thirdPlaceRanking, bracketState, derived, awards]);
 
   const isValid = validationErrors.length === 0;
 

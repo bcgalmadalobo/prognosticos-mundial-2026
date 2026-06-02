@@ -119,6 +119,11 @@ export function BracketView({ state, onChoice }: Props) {
 
   return (
     <div className="mt-8">
+      {state.thirdAssignmentError && (
+        <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-400">
+          <strong>Combinação de terceiros não reconhecida.</strong> Verifica a classificação dos grupos e o ranking dos terceiros. A submissão está bloqueada até este erro ser corrigido.
+        </div>
+      )}
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-neon-500">
           Passo 3 de 4

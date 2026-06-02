@@ -139,6 +139,7 @@ export interface BracketMatchState {
 
 export interface BracketState {
   matches: Record<string, BracketMatchState>;
+  thirdAssignmentError?: boolean;
 }
 
 export interface DerivedRoundTeams {
