@@ -7,8 +7,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
-import { getKnockoutMatch, updateKnockoutMatch } from "@/lib/db";
-import { ROUND_LABELS, notificationTime } from "@/lib/matchPredictionValidation";
+import { ROUND_LABELS } from "@/lib/matchPredictionValidation";
 import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90 } from "@/types";
 
 const inputCls =
@@ -22,16 +21,34 @@ export default function AdminMatchEditPage({ params }: PageProps) {
   const { matchId } = use(params);
   const [match, setMatch] = useState<KnockoutMatch | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [notifyMsg, setNotifyMsg] = useState("");
   const [notifyErr, setNotifyErr] = useState("");
   const [notifying, setNotifying] = useState(false);
 
+  async function fetchMatch() {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setLoadErr("Sessão expirada. Recarrega a página."); return null; }
+      const res = await fetch(`/api/admin/knockout-matches/${matchId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json() as { match?: KnockoutMatch; error?: string };
+      if (!res.ok) { setLoadErr(data.error ?? "Erro ao carregar jogo."); return null; }
+      return data.match ?? null;
+    } catch {
+      setLoadErr("Erro de rede ao carregar jogo.");
+      return null;
+    }
+  }
+
   useEffect(() => {
-    getKnockoutMatch(matchId)
-      .then(setMatch)
+    fetchMatch()
+      .then((m) => { if (m) setMatch(m); })
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
 
   async function handleSave(e: FormEvent<HTMLFormElement>) {
@@ -41,23 +58,32 @@ export default function AdminMatchEditPage({ params }: PageProps) {
     const f = new FormData(e.currentTarget);
     const startsAt = String(f.get("startsAt") ?? "").trim();
 
-    const updates: Partial<KnockoutMatch> = {
+    const updates: Record<string, unknown> = {
       teamA: String(f.get("teamA") ?? "").trim() || null,
       teamB: String(f.get("teamB") ?? "").trim() || null,
-      teamAName: String(f.get("teamAName") ?? "").trim() || undefined,
-      teamBName: String(f.get("teamBName") ?? "").trim() || undefined,
       bettingOpen: f.get("bettingOpen") === "on",
       status: f.get("status") as KnockoutMatchStatus,
-      oddsTeamA: f.get("oddsTeamA") ? Number(f.get("oddsTeamA")) : undefined,
-      oddsDraw: f.get("oddsDraw") ? Number(f.get("oddsDraw")) : undefined,
-      oddsTeamB: f.get("oddsTeamB") ? Number(f.get("oddsTeamB")) : undefined,
-      winnerTeamId: String(f.get("winnerTeamId") ?? "").trim() || undefined,
     };
 
-    if (startsAt) {
-      updates.startsAt = startsAt;
-      updates.notificationScheduledAt = notificationTime(startsAt);
-    }
+    const teamAName = String(f.get("teamAName") ?? "").trim();
+    if (teamAName) updates.teamAName = teamAName;
+
+    const teamBName = String(f.get("teamBName") ?? "").trim();
+    if (teamBName) updates.teamBName = teamBName;
+
+    const oddsTeamA = f.get("oddsTeamA");
+    if (oddsTeamA) updates.oddsTeamA = Number(oddsTeamA);
+
+    const oddsDraw = f.get("oddsDraw");
+    if (oddsDraw) updates.oddsDraw = Number(oddsDraw);
+
+    const oddsTeamB = f.get("oddsTeamB");
+    if (oddsTeamB) updates.oddsTeamB = Number(oddsTeamB);
+
+    const winnerTeamId = String(f.get("winnerTeamId") ?? "").trim();
+    if (winnerTeamId) updates.winnerTeamId = winnerTeamId;
+
+    if (startsAt) updates.startsAt = startsAt;
 
     const r90 = String(f.get("result90") ?? "").trim();
     if (r90) updates.result90 = r90 as KnockoutResult90;
@@ -69,10 +95,20 @@ export default function AdminMatchEditPage({ params }: PageProps) {
     }
 
     try {
-      await updateKnockoutMatch(matchId, updates);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch(`/api/admin/knockout-matches/${matchId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json() as { ok?: boolean; match?: KnockoutMatch; error?: string; details?: string };
+      if (!res.ok) throw new Error(data.error ?? "Erro ao guardar.");
       setMsg("Guardado.");
-      const refreshed = await getKnockoutMatch(matchId);
-      setMatch(refreshed);
+      if (data.match) setMatch(data.match);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Erro ao guardar.");
     }
@@ -84,6 +120,7 @@ export default function AdminMatchEditPage({ params }: PageProps) {
     setNotifying(true);
     try {
       const token = await auth.currentUser?.getIdToken();
+      if (!token) { setNotifyErr("Sessão expirada. Recarrega a página."); return; }
       const res = await fetch(`/api/knockout-matches/${matchId}/notify`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -95,8 +132,8 @@ export default function AdminMatchEditPage({ params }: PageProps) {
           ? `Notificação enviada para ${data.recipientCount} utilizadores.`
           : (data.message ?? "Nenhum utilizador com notificações ativas.")
       );
-      const refreshed = await getKnockoutMatch(matchId);
-      setMatch(refreshed);
+      const refreshed = await fetchMatch();
+      if (refreshed) setMatch(refreshed);
     } catch (e) {
       setNotifyErr(e instanceof Error ? e.message : "Erro ao enviar.");
     } finally {
@@ -105,6 +142,7 @@ export default function AdminMatchEditPage({ params }: PageProps) {
   }
 
   if (loading) return <Protected adminOnly><main className="p-4 text-pitch-400">A carregar…</main></Protected>;
+  if (loadErr) return <Protected adminOnly><main className="p-4 text-red-400">{loadErr}</main></Protected>;
   if (!match) return <Protected adminOnly><main className="p-4 text-pitch-400">Jogo não encontrado.</main></Protected>;
 
   return (

@@ -91,7 +91,7 @@ service cloud.firestore {
 
     match /knockoutMatches/{id} {
       allow read: if signedIn();
-      allow write: if isAdmin();
+      allow write: if false; // all writes go through Admin SDK (API routes)
     }
   }
 }

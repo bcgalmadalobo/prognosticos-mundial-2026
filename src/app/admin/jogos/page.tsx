@@ -6,7 +6,6 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
-import { listKnockoutMatches } from "@/lib/db";
 import { ROUND_LABELS } from "@/lib/matchPredictionValidation";
 import type { KnockoutMatch, KnockoutRound } from "@/types";
 
@@ -23,14 +22,29 @@ const statusBadge = (s: string) => {
 export default function AdminJogosPage() {
   const [matches, setMatches] = useState<KnockoutMatch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadErr, setLoadErr] = useState("");
   const [seedMsg, setSeedMsg] = useState("");
   const [seedErr, setSeedErr] = useState("");
   const [seeding, setSeeding] = useState(false);
 
+  async function fetchMatches() {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setLoadErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch("/api/admin/knockout-matches", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json() as { matches?: KnockoutMatch[]; error?: string };
+      if (!res.ok) { setLoadErr(data.error ?? "Erro ao carregar jogos."); return; }
+      setMatches(data.matches ?? []);
+    } catch {
+      setLoadErr("Erro de rede ao carregar jogos.");
+    }
+  }
+
   useEffect(() => {
-    listKnockoutMatches()
-      .then(setMatches)
-      .finally(() => setLoading(false));
+    fetchMatches().finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSeed() {
@@ -39,15 +53,16 @@ export default function AdminJogosPage() {
     setSeeding(true);
     try {
       const token = await auth.currentUser?.getIdToken();
+      if (!token) { setSeedErr("Sessão expirada. Recarrega a página."); return; }
       const res = await fetch("/api/admin/seed-matches", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json() as { ok?: boolean; created?: number; updated?: number; total?: number; error?: string };
+      const data = await res.json() as { ok?: boolean; created?: number; updated?: number; total?: number; error?: string; details?: string };
       if (!res.ok) throw new Error(data.error ?? "Erro");
       setSeedMsg(`Importado: ${data.created} novos, ${data.updated} atualizados (${data.total} total).`);
-      const updated = await listKnockoutMatches();
-      setMatches(updated);
+      setLoadErr("");
+      await fetchMatches();
     } catch (e) {
       setSeedErr(e instanceof Error ? e.message : "Erro desconhecido.");
     } finally {
@@ -83,10 +98,15 @@ export default function AdminJogosPage() {
             {seedErr}
           </div>
         )}
+        {loadErr && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            {loadErr}
+          </div>
+        )}
 
         {loading ? (
           <p className="text-pitch-400">A carregar…</p>
-        ) : matches.length === 0 ? (
+        ) : matches.length === 0 && !loadErr ? (
           <Card>
             <p className="text-pitch-300">Nenhum jogo carregado. Clica em "Importar" para criar os 32 jogos oficiais.</p>
           </Card>
