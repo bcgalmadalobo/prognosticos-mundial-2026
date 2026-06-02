@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
           status: "scheduled",
           timeTBD: false,
           notificationScheduledAt: notificationTime(match.startsAt),
+          notificationStatus: "pending",
           createdAt: FieldValue.serverTimestamp(),
         });
         created++;

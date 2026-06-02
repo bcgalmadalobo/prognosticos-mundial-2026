@@ -263,7 +263,7 @@ export type KnockoutRound =
 
 export type KnockoutMatchStatus = "scheduled" | "live" | "finished";
 export type KnockoutResult90 = "teamA" | "draw" | "teamB";
-export type KnockoutNotificationStatus = "pending" | "sent" | "failed";
+export type KnockoutNotificationStatus = "pending" | "sending" | "sent" | "failed";
 
 export interface KnockoutMatchSeed {
   id: string;
@@ -300,6 +300,7 @@ export interface KnockoutMatch extends KnockoutMatchSeed {
   notificationScheduledAt?: string | null;
   notificationSentAt?: string | null;
   notificationStatus?: KnockoutNotificationStatus;
+  notificationError?: string;
 }
 
 export interface KnockoutMatchPrediction {
