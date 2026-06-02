@@ -8,6 +8,9 @@ import { getAppSettings, saveAppSettings } from "@/lib/db";
 
 const DEFAULT_DEADLINE = "2026-06-11T18:00:00.000Z";
 
+const fieldCls =
+  "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 placeholder:text-pitch-400 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
+
 function isValidIsoDate(str: string): boolean {
   if (!str.trim()) return false;
   const d = new Date(str.trim());
@@ -69,23 +72,35 @@ export default function ConfiguracoesPage() {
 
   return (
     <Protected adminOnly>
-      <main className="mx-auto max-w-2xl space-y-4 p-4">
+      <main className="mx-auto max-w-2xl space-y-6 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-pitch-50">Configurações</h1>
-          <a href="/admin" className="text-sm text-neon-400">
+          <div>
+            <h1 className="text-2xl font-bold text-pitch-50">Configurações</h1>
+            <p className="mt-0.5 text-sm text-pitch-300">Definições gerais da competição.</p>
+          </div>
+          <a
+            href="/admin"
+            className="rounded-xl border border-pitch-500 px-3 py-1.5 text-sm font-medium text-pitch-200 transition-colors hover:border-pitch-400 hover:text-pitch-50"
+          >
             ← Admin
           </a>
         </div>
 
         {loading ? (
-          <p className="text-sm text-pitch-300">A carregar...</p>
+          <p className="animate-pulse text-sm text-pitch-400">A carregar...</p>
         ) : (
           <form onSubmit={handleSave} className="space-y-4">
             {message && (
-              <p className="rounded-xl bg-green-50 p-3 text-sm text-green-900">{message}</p>
+              <div className="flex items-start gap-2 rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+                <span className="mt-0.5 shrink-0">&#10003;</span>
+                <p>{message}</p>
+              </div>
             )}
             {error && (
-              <p className="rounded-xl bg-red-50 p-3 text-sm text-red-900">{error}</p>
+              <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+                <span className="mt-0.5 shrink-0">&#10005;</span>
+                <p>{error}</p>
+              </div>
             )}
 
             <Card title="Nome da competição">
@@ -95,7 +110,7 @@ export default function ConfiguracoesPage() {
                 onChange={(e) => setCompetitionName(e.target.value)}
                 placeholder="Ex: Prognósticos Mundial 2026"
                 maxLength={120}
-                className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
+                className={fieldCls}
               />
             </Card>
 
@@ -104,13 +119,14 @@ export default function ConfiguracoesPage() {
                 <select
                   value={predictionStatus}
                   onChange={(e) => setPredictionStatus(e.target.value as "open" | "closed")}
-                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
+                  className={fieldCls}
                 >
                   <option value="open">Aberta — deadline controla o prazo</option>
                   <option value="closed">Fechada — bloqueia submissões imediatamente</option>
                 </select>
-                <p className="text-xs text-pitch-300">
-                  "Fechada" sobrepõe-se à deadline: rejeita todas as submissões independentemente da data.
+                <p className="text-xs text-pitch-400">
+                  &ldquo;Fechada&rdquo; sobrepõe-se à deadline: rejeita todas as submissões
+                  independentemente da data.
                 </p>
               </div>
             </Card>
@@ -122,15 +138,17 @@ export default function ConfiguracoesPage() {
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
                   placeholder="2026-06-11T18:00:00.000Z"
-                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 font-mono text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
+                  className={`${fieldCls} font-mono`}
                 />
-                <p className="text-xs text-pitch-300">
+                <p className="text-xs text-pitch-400">
                   Formato ISO UTC. Portugal continental (verão, UTC+1):{" "}
-                  <code className="rounded bg-pitch-700 px-1">2026-06-11T18:00:00.000Z</code>{" "}
+                  <code className="rounded bg-pitch-700 px-1 text-pitch-200">
+                    2026-06-11T18:00:00.000Z
+                  </code>{" "}
                   corresponde a 11/06/2026 às 19:00.
                 </p>
                 {deadline && isValidIsoDate(deadline) && (
-                  <p className="text-xs text-pitch-300">
+                  <p className="text-xs text-neon-400">
                     Data reconhecida:{" "}
                     {new Date(deadline).toLocaleString("pt-PT", {
                       dateStyle: "short",
@@ -151,9 +169,9 @@ export default function ConfiguracoesPage() {
                   placeholder="Mensagem opcional mostrada aos participantes no dashboard."
                   rows={3}
                   maxLength={500}
-                  className="w-full rounded-xl border border-pitch-500 px-3 py-2.5 text-sm focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500"
+                  className={fieldCls}
                 />
-                <p className="text-right text-xs text-pitch-300">
+                <p className="text-right text-xs text-pitch-400">
                   {welcomeMessage.length}/500
                 </p>
               </div>

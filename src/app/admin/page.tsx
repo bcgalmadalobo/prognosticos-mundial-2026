@@ -12,8 +12,6 @@ import {
 } from "@/lib/db";
 import type { Match, MatchRound, MatchStatus, ScoreLine } from "@/types";
 
-// ── Navigation cards ─────────────────────────────────────────────────────────
-
 const NAV_CARDS = [
   {
     title: "Convites e participantes",
@@ -47,7 +45,11 @@ const NAV_CARDS = [
   },
 ];
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+const inputCls =
+  "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 placeholder:text-pitch-400 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
+
+const selectCls =
+  "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
 
 export default function AdminPage() {
   const [message, setMessage] = useState("");
@@ -153,7 +155,11 @@ export default function AdminPage() {
   return (
     <Protected adminOnly>
       <main className="mx-auto max-w-4xl space-y-8 p-4">
-        <h1 className="text-2xl font-bold text-pitch-50">Painel Admin</h1>
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold text-pitch-50">Painel Admin</h1>
+          <p className="mt-1 text-sm text-pitch-300">Painel de controlo da competição.</p>
+        </div>
 
         {/* Navigation grid */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -161,9 +167,16 @@ export default function AdminPage() {
             <a
               key={card.href}
               href={card.href}
-              className="block rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card transition-all hover:border-neon-500/50 hover:shadow-glow"
+              className="group block rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card transition-all hover:border-neon-500/60 hover:bg-pitch-700/50 hover:shadow-glow"
             >
-              <h2 className="font-bold text-pitch-50">{card.title}</h2>
+              <div className="flex items-start justify-between">
+                <h2 className="font-bold text-pitch-50 transition-colors group-hover:text-neon-400">
+                  {card.title}
+                </h2>
+                <span className="ml-2 shrink-0 text-pitch-400 transition-colors group-hover:text-neon-400">
+                  →
+                </span>
+              </div>
               <p className="mt-1 text-sm text-pitch-300">{card.description}</p>
             </a>
           ))}
@@ -171,134 +184,158 @@ export default function AdminPage() {
 
         {/* Feedback messages */}
         {message && (
-          <p className="rounded-xl bg-green-50 p-3 text-green-900">{message}</p>
+          <div className="flex items-start gap-2 rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+            <span className="mt-0.5 shrink-0">&#10003;</span>
+            <p>{message}</p>
+          </div>
         )}
         {error && (
-          <p className="rounded-xl bg-red-50 p-3 text-red-900">{error}</p>
+          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            <span className="mt-0.5 shrink-0">&#10005;</span>
+            <p>{error}</p>
+          </div>
         )}
 
         {/* Secondary tools */}
         <div>
-          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-pitch-300">
-            Ferramentas
-          </h2>
+          <div className="mb-4 flex items-center gap-3">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-pitch-400">
+              Ferramentas
+            </h2>
+            <div className="h-px flex-1 bg-pitch-600" />
+          </div>
           <div className="space-y-4">
             <Card title="Criar equipa">
-              <form onSubmit={addTeam} className="grid gap-3 md:grid-cols-4">
-                <input
-                  name="id"
-                  className="rounded-xl border p-3"
-                  placeholder="id ex portugal"
-                  required
-                />
-                <input
-                  name="name"
-                  className="rounded-xl border p-3"
-                  placeholder="Nome"
-                  required
-                />
-                <input
-                  name="group"
-                  className="rounded-xl border p-3"
-                  placeholder="Grupo"
-                />
-                <Button>Guardar</Button>
+              <form onSubmit={addTeam} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">ID</label>
+                  <input name="id" className={inputCls} placeholder="ex: portugal" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Nome</label>
+                  <input name="name" className={inputCls} placeholder="Portugal" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Grupo</label>
+                  <input name="group" className={inputCls} placeholder="ex: A" />
+                </div>
+                <div className="flex items-end">
+                  <Button className="w-full">Guardar</Button>
+                </div>
               </form>
             </Card>
 
             <Card title="Criar/editar jogo">
-              <form onSubmit={addMatch} className="grid gap-3 md:grid-cols-3">
-                <input
-                  name="id"
-                  className="rounded-xl border p-3"
-                  placeholder="id ex teste_01"
-                  required
-                />
-                <select name="round" className="rounded-xl border p-3">
-                  <option value="round_of_32">Round of 32 / 16-avos</option>
-                  <option value="round_of_16">Oitavos</option>
-                  <option value="quarter_final">Quartos</option>
-                  <option value="semi_final">Meia-final</option>
-                  <option value="final">Final</option>
-                </select>
-                <select name="status" className="rounded-xl border p-3">
-                  <option value="draft">Draft</option>
-                  <option value="open">Open</option>
-                  <option value="locked">Locked</option>
-                  <option value="finished">Finished</option>
-                </select>
-                <input
-                  name="homeTeam"
-                  className="rounded-xl border p-3"
-                  placeholder="Casa ex portugal"
-                  required
-                />
-                <input
-                  name="awayTeam"
-                  className="rounded-xl border p-3"
-                  placeholder="Fora ex espanha"
-                  required
-                />
-                <input
-                  name="oddHome"
-                  className="rounded-xl border p-3"
-                  placeholder="Odd casa"
-                  type="number"
-                  step="0.01"
-                  required
-                />
-                <input
-                  name="oddDraw"
-                  className="rounded-xl border p-3"
-                  placeholder="Odd empate"
-                  type="number"
-                  step="0.01"
-                  required
-                />
-                <input
-                  name="oddAway"
-                  className="rounded-xl border p-3"
-                  placeholder="Odd fora"
-                  type="number"
-                  step="0.01"
-                  required
-                />
-                <Button>Guardar jogo</Button>
+              <form onSubmit={addMatch} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">ID do jogo</label>
+                  <input name="id" className={inputCls} placeholder="ex: jogo_01" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Ronda</label>
+                  <select name="round" className={selectCls}>
+                    <option value="round_of_32">Round of 32 / 16-avos</option>
+                    <option value="round_of_16">Oitavos</option>
+                    <option value="quarter_final">Quartos</option>
+                    <option value="semi_final">Meia-final</option>
+                    <option value="final">Final</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Estado</label>
+                  <select name="status" className={selectCls}>
+                    <option value="draft">Draft</option>
+                    <option value="open">Open</option>
+                    <option value="locked">Locked</option>
+                    <option value="finished">Finished</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Casa</label>
+                  <input name="homeTeam" className={inputCls} placeholder="ex: portugal" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Fora</label>
+                  <input name="awayTeam" className={inputCls} placeholder="ex: espanha" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd casa</label>
+                  <input
+                    name="oddHome"
+                    className={inputCls}
+                    placeholder="ex: 2.10"
+                    type="number"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd empate</label>
+                  <input
+                    name="oddDraw"
+                    className={inputCls}
+                    placeholder="ex: 3.20"
+                    type="number"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd fora</label>
+                  <input
+                    name="oddAway"
+                    className={inputCls}
+                    placeholder="ex: 3.50"
+                    type="number"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div className="flex items-end sm:col-span-2 lg:col-span-1">
+                  <Button className="w-full">Guardar jogo</Button>
+                </div>
               </form>
             </Card>
 
             <Card title="Inserir resultado">
-              <form onSubmit={addResult} className="grid gap-3 md:grid-cols-4">
-                <select name="matchId" className="rounded-xl border p-3" required>
-                  <option value="">Escolher jogo</option>
-                  {matches.map((match) => (
-                    <option key={match.id} value={match.id}>
-                      {match.id}: {match.homeTeam} vs {match.awayTeam} [{match.status}]
-                    </option>
-                  ))}
-                </select>
-                <input
-                  name="result90"
-                  className="rounded-xl border p-3"
-                  placeholder="Resultado 90 min ex 1-0"
-                  required
-                />
-                <input
-                  name="result120"
-                  className="rounded-xl border p-3"
-                  placeholder="Resultado 120 min, opcional"
-                />
-                <input
-                  name="qualifiedTeam"
-                  className="rounded-xl border p-3"
-                  placeholder="Passou ex portugal"
-                  required
-                />
-                <Button>Guardar resultado</Button>
+              <form onSubmit={addResult} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Jogo</label>
+                  <select name="matchId" className={selectCls} required>
+                    <option value="">Escolher jogo</option>
+                    {matches.map((match) => (
+                      <option key={match.id} value={match.id}>
+                        {match.id}: {match.homeTeam} vs {match.awayTeam} [{match.status}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">
+                    Resultado 90 min
+                  </label>
+                  <input name="result90" className={inputCls} placeholder="ex: 1-0" required />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">
+                    Resultado 120 min{" "}
+                    <span className="font-normal text-pitch-400">(opcional)</span>
+                  </label>
+                  <input name="result120" className={inputCls} placeholder="ex: 1-1" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">
+                    Equipa qualificada
+                  </label>
+                  <input name="qualifiedTeam" className={inputCls} placeholder="ex: portugal" required />
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <Button>Guardar resultado</Button>
+                </div>
               </form>
-              <p className="mt-3 text-sm text-pitch-200">
-                Nos oitavos e 16-avos, podes deixar o resultado 120 min vazio. Nos quartos, meias e final,
-                preenche se quiseres pontuar resultado exato após prolongamento.
+              <p className="mt-3 text-sm text-pitch-300">
+                Nos oitavos e 16-avos, podes deixar o resultado 120 min vazio. Nos quartos, meias e
+                final, preenche se quiseres pontuar resultado exato após prolongamento.
               </p>
             </Card>
           </div>

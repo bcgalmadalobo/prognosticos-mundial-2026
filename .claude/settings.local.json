@@ -11,7 +11,8 @@
       "Bash(dir C:\\\\Users\\\\bcgal\\\\Downloads\\\\prognosticos-mundial-2026-starter\\\\prognosticos-mundial-2026\\\\*.md /b)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

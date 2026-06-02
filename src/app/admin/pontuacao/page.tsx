@@ -37,6 +37,9 @@ function deepClone(s: ScoringSettings): ScoringSettings {
   return JSON.parse(JSON.stringify(s)) as ScoringSettings;
 }
 
+const numberInputCls =
+  "w-20 rounded-xl border border-pitch-500 bg-pitch-900 px-2 py-2 text-right text-sm text-pitch-50 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
+
 export default function PontuacaoPage() {
   const [settings, setSettings] = useState<ScoringSettings>(deepClone(defaultScoring));
   const [busy, setSaveBusy] = useState(false);
@@ -97,38 +100,58 @@ export default function PontuacaoPage() {
 
   return (
     <Protected adminOnly>
-      <main className="mx-auto max-w-4xl space-y-4 p-4">
+      <main className="mx-auto max-w-4xl space-y-6 p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Editor de pontuação</h1>
-          <a href="/admin" className="text-sm text-neon-400">← Admin</a>
+          <div>
+            <h1 className="text-2xl font-bold text-pitch-50">Editor de pontuação</h1>
+            <p className="mt-0.5 text-sm text-pitch-300">Ajusta os pontos por categoria e ronda.</p>
+          </div>
+          <a
+            href="/admin"
+            className="rounded-xl border border-pitch-500 px-3 py-1.5 text-sm font-medium text-pitch-200 transition-colors hover:border-pitch-400 hover:text-pitch-50"
+          >
+            ← Admin
+          </a>
         </div>
 
         <p className="text-sm text-pitch-300">
           Edita os pontos atribuídos por cada tipo de acerto. Clica em{" "}
-          <strong>Guardar pontuação</strong> para persistir. O recálculo de{" "}
-          <a href="/admin/resultados" className="underline">resultados</a> vai usar estes valores.
+          <strong className="text-pitch-100">Guardar pontuação</strong> para persistir. O recálculo
+          de{" "}
+          <a href="/admin/resultados" className="text-neon-400 underline">
+            resultados
+          </a>{" "}
+          vai usar estes valores.
         </p>
 
-        {message && <p className="rounded-xl bg-green-50 p-3 text-green-900">{message}</p>}
-        {error   && <p className="rounded-xl bg-red-50   p-3 text-red-900">{error}</p>}
+        {message && (
+          <div className="flex items-start gap-2 rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+            <span className="mt-0.5 shrink-0">&#10003;</span>
+            <p>{message}</p>
+          </div>
+        )}
+        {error && (
+          <div className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            <span className="mt-0.5 shrink-0">&#10005;</span>
+            <p>{error}</p>
+          </div>
+        )}
 
         <Card title="Aposta inicial">
           <div className="grid gap-3 md:grid-cols-2">
             {INITIAL_FIELDS.map(({ key, label }) => (
-              <div key={key}>
-                <label className="mb-1 block text-xs font-semibold text-pitch-200">
-                  {label}
-                </label>
-                <div className="flex items-center gap-2">
+              <div key={key} className="flex items-center justify-between gap-3">
+                <label className="text-sm text-pitch-100">{label}</label>
+                <div className="flex shrink-0 items-center gap-2">
                   <input
                     type="number"
                     min={0}
                     step={1}
-                    className="w-24 rounded-xl border p-2 text-right text-sm"
+                    className={numberInputCls}
                     value={settings.initial[key]}
                     onChange={(e) => setInitial(key, e.target.value)}
                   />
-                  <span className="text-xs text-pitch-300">pts</span>
+                  <span className="w-6 text-xs font-semibold text-neon-400">pts</span>
                 </div>
               </div>
             ))}
@@ -139,48 +162,61 @@ export default function PontuacaoPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-pitch-500 text-left text-xs font-semibold text-pitch-300">
+                <tr className="border-b border-pitch-600 text-left text-xs font-semibold text-pitch-400">
                   <th className="pb-2 pr-4">Ronda</th>
                   <th className="pb-2 pr-4">Mult. odds</th>
-                  <th className="pb-2 pr-4">Equipa qualificada (pts)</th>
-                  <th className="pb-2">Resultado exato (pts)</th>
+                  <th className="pb-2 pr-4">Equipa qualificada</th>
+                  <th className="pb-2">Resultado exato</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-pitch-600">
                 {KNOCKOUT_ROUNDS.map(({ key, label }) => {
                   const row = settings.knockout[key];
                   return (
-                    <tr key={key} className="py-2">
-                      <td className="py-3 pr-4 font-medium">{label}</td>
+                    <tr key={key} className="transition-colors hover:bg-pitch-700/30">
+                      <td className="py-3 pr-4 font-medium text-pitch-100">{label}</td>
                       <td className="py-3 pr-4">
-                        <input
-                          type="number"
-                          min={0}
-                          step={0.5}
-                          className="w-20 rounded-xl border p-2 text-right text-sm"
-                          value={row.oddsMultiplier}
-                          onChange={(e) => setKnockout(key, "oddsMultiplier", e.target.value)}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.5}
+                            className={numberInputCls}
+                            value={row.oddsMultiplier}
+                            onChange={(e) => setKnockout(key, "oddsMultiplier", e.target.value)}
+                          />
+                          <span className="text-xs font-semibold text-neon-400">&#215;</span>
+                        </div>
                       </td>
                       <td className="py-3 pr-4">
-                        <input
-                          type="number"
-                          min={0}
-                          step={1}
-                          className="w-20 rounded-xl border p-2 text-right text-sm"
-                          value={row.qualifiedTeamPoints}
-                          onChange={(e) => setKnockout(key, "qualifiedTeamPoints", e.target.value)}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            className={numberInputCls}
+                            value={row.qualifiedTeamPoints}
+                            onChange={(e) =>
+                              setKnockout(key, "qualifiedTeamPoints", e.target.value)
+                            }
+                          />
+                          <span className="text-xs font-semibold text-neon-400">pts</span>
+                        </div>
                       </td>
                       <td className="py-3">
-                        <input
-                          type="number"
-                          min={0}
-                          step={1}
-                          className="w-20 rounded-xl border p-2 text-right text-sm"
-                          value={row.scoreExactPoints}
-                          onChange={(e) => setKnockout(key, "scoreExactPoints", e.target.value)}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            className={numberInputCls}
+                            value={row.scoreExactPoints}
+                            onChange={(e) =>
+                              setKnockout(key, "scoreExactPoints", e.target.value)
+                            }
+                          />
+                          <span className="text-xs font-semibold text-neon-400">pts</span>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -188,7 +224,7 @@ export default function PontuacaoPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-3 text-xs text-pitch-300">
+          <p className="mt-3 text-xs text-pitch-400">
             Mult. odds: pontos = odd × multiplicador (ex: odd 2.1 × mult 2 = 4.2 pts).
             Resultado exato aplica-se apenas a partir dos quartos.
           </p>
@@ -201,7 +237,7 @@ export default function PontuacaoPage() {
           <button
             type="button"
             onClick={handleReset}
-            className="rounded-xl border border-pitch-500 px-4 py-2 text-sm font-semibold text-pitch-200 hover:bg-pitch-700"
+            className="rounded-xl border border-pitch-500 px-4 py-2 text-sm font-semibold text-pitch-200 transition-colors hover:border-pitch-400 hover:bg-pitch-700"
           >
             Repor defaults
           </button>
