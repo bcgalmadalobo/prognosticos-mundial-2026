@@ -16,6 +16,20 @@ import type { InitialPrediction } from "@/types";
 const DRAFT_KEY = "initialPredictionDraft.v1";
 const DEFAULT_DEADLINE_UTC = "2026-06-11T18:00:00.000Z";
 
+// ── Compatibility guard ───────────────────────────────────────────────────────
+
+function isGroupOrdersCompatible(groupOrders: Record<string, string[]>): boolean {
+  for (const letter of GROUP_LETTERS) {
+    const stored = groupOrders[letter];
+    const canonical = GROUPS[letter];
+    if (!stored || stored.length !== canonical.length) return false;
+    const storedSet = new Set(stored);
+    if (!canonical.every((id) => storedSet.has(id))) return false;
+    if (!stored.every((id) => !!TEAMS[id])) return false;
+  }
+  return true;
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type PageMode = "editing" | "summary";
@@ -64,6 +78,7 @@ function loadDraft(): {
   thirdPlaceRanking: string[];
   bracketChoices: Record<string, string | null>;
   awards: Awards;
+  discarded: boolean;
 } {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -74,10 +89,24 @@ function loadDraft(): {
         thirdPlaceRanking: deriveThirds(groups),
         bracketChoices: {},
         awards: { ...EMPTY_AWARDS },
+        discarded: false,
       };
     }
     const parsed = JSON.parse(raw) as Partial<DraftData>;
     const groupOrders = parsed.groupOrders ?? structuredClone(GROUPS);
+
+    if (!isGroupOrdersCompatible(groupOrders)) {
+      localStorage.removeItem(DRAFT_KEY);
+      const groups = structuredClone(GROUPS);
+      return {
+        groupOrders: groups,
+        thirdPlaceRanking: deriveThirds(groups),
+        bracketChoices: {},
+        awards: { ...EMPTY_AWARDS },
+        discarded: true,
+      };
+    }
+
     const version = parsed.version ?? 0;
     const thirdPlaceRanking =
       !parsed.thirdPlaceRanking || version < 2
@@ -87,7 +116,7 @@ function loadDraft(): {
       version >= 3 && parsed.bracketChoices ? parsed.bracketChoices : {};
     const awards =
       version >= 4 && parsed.awards ? parsed.awards : { ...EMPTY_AWARDS };
-    return { groupOrders, thirdPlaceRanking, bracketChoices, awards };
+    return { groupOrders, thirdPlaceRanking, bracketChoices, awards, discarded: false };
   } catch {
     const groups = structuredClone(GROUPS);
     return {
@@ -95,6 +124,7 @@ function loadDraft(): {
       thirdPlaceRanking: deriveThirds(groups),
       bracketChoices: {},
       awards: { ...EMPTY_AWARDS },
+      discarded: false,
     };
   }
 }
@@ -306,6 +336,8 @@ export default function ApostaInicialPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [draftWasCleared, setDraftWasCleared] = useState(false);
+  const [firestorePredictionIncompatible, setFirestorePredictionIncompatible] = useState(false);
 
   // Effect 1: Hydrate form from localStorage on mount (SSR-safe placeholder)
   useEffect(() => {
@@ -314,6 +346,7 @@ export default function ApostaInicialPage() {
     setThirdPlaceRanking(draft.thirdPlaceRanking);
     setBracketChoices(draft.bracketChoices);
     setAwards(draft.awards);
+    if (draft.discarded) setDraftWasCleared(true);
     setHydrated(true);
   }, []);
 
@@ -340,21 +373,28 @@ export default function ApostaInicialPage() {
         }
 
         if (pred) {
-          // Populate form state from Firestore prediction (overrides localStorage draft)
-          setGroupOrders(pred.groupPositions ?? structuredClone(GROUPS));
-          setThirdPlaceRanking(
-            pred.thirdPlaceRanking ??
-              deriveThirds(pred.groupPositions ?? structuredClone(GROUPS)),
-          );
-          setBracketChoices(pred.bracketChoices ?? {});
-          setAwards({
-            topScorer: pred.topScorer ?? "",
-            bestPlayer: pred.bestPlayer ?? "",
-            bestYoungPlayer: pred.bestYoungPlayer ?? "",
-            bestGoalkeeper: pred.bestGoalkeeper ?? "",
-          });
-          setExistingPrediction(pred);
-          setPageMode("summary");
+          if (!isGroupOrdersCompatible(pred.groupPositions ?? {})) {
+            // Prediction has stale team IDs — flag it; do not load stale data into form
+            setFirestorePredictionIncompatible(true);
+            setExistingPrediction(pred);
+            // pageMode stays "editing" so the user can resubmit with current teams
+          } else {
+            // Populate form state from Firestore prediction (overrides localStorage draft)
+            setGroupOrders(pred.groupPositions ?? structuredClone(GROUPS));
+            setThirdPlaceRanking(
+              pred.thirdPlaceRanking ??
+                deriveThirds(pred.groupPositions ?? structuredClone(GROUPS)),
+            );
+            setBracketChoices(pred.bracketChoices ?? {});
+            setAwards({
+              topScorer: pred.topScorer ?? "",
+              bestPlayer: pred.bestPlayer ?? "",
+              bestYoungPlayer: pred.bestYoungPlayer ?? "",
+              bestGoalkeeper: pred.bestGoalkeeper ?? "",
+            });
+            setExistingPrediction(pred);
+            setPageMode("summary");
+          }
         }
       })
       .catch(() => {
@@ -579,6 +619,20 @@ export default function ApostaInicialPage() {
 
   // Locked — closed by admin or past deadline
   if (isLocked) {
+    if (existingPrediction && firestorePredictionIncompatible) {
+      return (
+        <Protected>
+          <main className="mx-auto max-w-2xl px-4 py-6">
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
+              <p className="text-base font-bold text-red-800">Aposta desatualizada</p>
+              <p className="mt-2 text-sm text-red-700">
+                A tua aposta anterior contém seleções que já não participam neste Mundial. O prazo para resubmeter já terminou.
+              </p>
+            </div>
+          </main>
+        </Protected>
+      );
+    }
     if (existingPrediction) {
       return (
         <Protected>
@@ -609,8 +663,8 @@ export default function ApostaInicialPage() {
     );
   }
 
-  // Before deadline and open — summary mode
-  if (pageMode === "summary" && existingPrediction) {
+  // Before deadline and open — summary mode (only for compatible predictions)
+  if (pageMode === "summary" && existingPrediction && !firestorePredictionIncompatible) {
     return (
       <Protected>
         <PredictionSummary
@@ -628,6 +682,20 @@ export default function ApostaInicialPage() {
   return (
     <Protected>
       <main className="mx-auto max-w-5xl px-4 py-6">
+        {/* Stale localStorage draft cleared */}
+        {draftWasCleared && (
+          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            O rascunho antigo foi limpo porque os dados das seleções foram atualizados.
+          </div>
+        )}
+
+        {/* Incompatible Firestore prediction — prompt to resubmit */}
+        {firestorePredictionIncompatible && (
+          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <strong>A tua aposta anterior contém seleções desatualizadas.</strong> Preenche e submete uma nova aposta com as seleções atuais.
+          </div>
+        )}
+
         {/* Deadline info banner */}
         <div className="mb-5 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
           Podes editar a tua aposta até{" "}
