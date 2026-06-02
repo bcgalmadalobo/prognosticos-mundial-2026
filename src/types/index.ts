@@ -238,3 +238,15 @@ export interface LeaderboardEntry {
   totalPoints: number;
   updatedAt?: unknown;
 }
+
+export interface NotificationLog {
+  id?: string;
+  sentAt?: unknown;
+  sentBy: string;
+  title: string;
+  message: string;
+  url?: string;
+  recipientCount: number;
+  oneSignalResponse: Record<string, unknown>;
+  status: "sent" | "failed";
+}

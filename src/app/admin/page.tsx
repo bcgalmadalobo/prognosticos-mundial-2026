@@ -43,6 +43,11 @@ const NAV_CARDS = [
     description: "Editar nome da competição, deadline e estado da aposta.",
     href: "/admin/configuracoes",
   },
+  {
+    title: "Notificações",
+    description: "Enviar notificações push para todos os participantes.",
+    href: "/admin/notificacoes",
+  },
 ];
 
 const inputCls =
