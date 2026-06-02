@@ -3,10 +3,20 @@ import { adminDb } from "@/lib/firebase-admin";
 import { sendKnockoutNotification } from "@/lib/sendKnockoutNotification";
 import type { KnockoutMatch } from "@/types";
 
-function isCronAuthorized(req: NextRequest): boolean {
+function isCronAuthorized(req: NextRequest): "ok" | "missing-secret" | "wrong-secret" {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return req.headers.get("Authorization") === `Bearer ${secret}`;
+  if (!secret) return "missing-secret";
+  return req.headers.get("Authorization") === `Bearer ${secret}` ? "ok" : "wrong-secret";
+}
+
+// Accepts Firestore Timestamp objects, ISO strings, or null/undefined safely.
+function toIsoString(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && "toDate" in (value as object)) {
+    return (value as { toDate(): Date }).toDate().toISOString();
+  }
+  return null;
 }
 
 async function runCron(): Promise<NextResponse> {
@@ -14,19 +24,20 @@ async function runCron(): Promise<NextResponse> {
   const now = new Date();
   const nowIso = now.toISOString();
 
-  // Single range inequality on notificationScheduledAt avoids composite index issues.
-  // startsAt > now and notificationStatus checks are applied in memory.
+  // Single-field inequality only — avoids requiring a composite Firestore index.
+  // status, bettingOpen, and startsAt checks are applied in memory below.
   const snap = await db
     .collection("knockoutMatches")
-    .where("status", "==", "scheduled")
-    .where("bettingOpen", "==", true)
     .where("notificationScheduledAt", "<=", nowIso)
     .get();
 
   const candidates = snap.docs.filter((d) => {
     const data = d.data() as KnockoutMatch;
+    if (data.status !== "scheduled") return false;
+    if (!data.bettingOpen) return false;
     // Must not have started yet
-    if (data.startsAt <= nowIso) return false;
+    const startsAt = toIsoString(data.startsAt);
+    if (!startsAt || startsAt <= nowIso) return false;
     // Skip if already processed (missing field = eligible, treat as pending)
     const ns = data.notificationStatus;
     return ns !== "sent" && ns !== "sending" && ns !== "failed";
@@ -86,23 +97,47 @@ async function runCron(): Promise<NextResponse> {
 }
 
 export async function GET(req: NextRequest) {
-  if (!isCronAuthorized(req)) {
+  const authResult = isCronAuthorized(req);
+  if (authResult !== "ok") {
+    if (authResult === "missing-secret") {
+      console.warn("[cron knockout notifications] CRON_SECRET not configured");
+      return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Nao autorizado." }, { status: 401 });
   }
   try {
     return await runCron();
-  } catch {
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+  } catch (error) {
+    console.error("[cron knockout notifications]", error);
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(req: NextRequest) {
-  if (!isCronAuthorized(req)) {
+  const authResult = isCronAuthorized(req);
+  if (authResult !== "ok") {
+    if (authResult === "missing-secret") {
+      console.warn("[cron knockout notifications] CRON_SECRET not configured");
+      return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 401 });
+    }
     return NextResponse.json({ error: "Nao autorizado." }, { status: 401 });
   }
   try {
     return await runCron();
-  } catch {
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+  } catch (error) {
+    console.error("[cron knockout notifications]", error);
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
   }
 }
