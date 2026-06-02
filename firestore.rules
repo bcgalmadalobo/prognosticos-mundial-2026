@@ -78,7 +78,8 @@ service cloud.firestore {
     }
 
     match /matchPredictions/{id} {
-      allow read: if owns(resource.data.userId) || isAdmin();
+      // Legacy predictions use userId; knockout predictions (Phase 7A) use uid
+      allow read: if owns(resource.data.userId) || owns(resource.data.uid) || isAdmin();
       allow create: if owns(request.resource.data.userId)
         && get(/databases/$(database)/documents/matches/$(request.resource.data.matchId)).data.status == "open";
       allow update: if isAdmin()
@@ -86,6 +87,11 @@ service cloud.firestore {
           && resource.data.locked != true
           && get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.status == "open");
       allow delete: if isAdmin();
+    }
+
+    match /knockoutMatches/{id} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
     }
   }
 }

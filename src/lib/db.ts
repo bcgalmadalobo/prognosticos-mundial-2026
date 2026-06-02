@@ -12,7 +12,20 @@
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { defaultScoring } from "@/data/defaultScoring";
-import type { AppSettings, AppUser, InitialPrediction, Invite, LeaderboardEntry, Match, MatchPrediction, ScoringSettings, Team, TournamentResults } from "@/types";
+import type {
+  AppSettings,
+  AppUser,
+  InitialPrediction,
+  Invite,
+  KnockoutMatch,
+  KnockoutMatchPrediction,
+  LeaderboardEntry,
+  Match,
+  MatchPrediction,
+  ScoringSettings,
+  Team,
+  TournamentResults,
+} from "@/types";
 
 function cleanUndefined<T extends Record<string, unknown>>(obj: T): T {
   const result: Record<string, unknown> = {};
@@ -172,4 +185,34 @@ export async function createInvite(invite: Omit<Invite, "id">) {
 export async function listInvites() {
   const snap = await getDocs(query(collection(db, "invites"), orderBy("createdAt", "desc")));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Invite));
+}
+
+// ── Knockout matches ──────────────────────────────────────────────────────────
+
+export async function listKnockoutMatches(): Promise<KnockoutMatch[]> {
+  const snap = await getDocs(
+    query(collection(db, "knockoutMatches"), orderBy("matchNumber", "asc"))
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as KnockoutMatch));
+}
+
+export async function getKnockoutMatch(matchId: string): Promise<KnockoutMatch | null> {
+  const snap = await getDoc(doc(db, "knockoutMatches", matchId));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as KnockoutMatch) : null;
+}
+
+export async function updateKnockoutMatch(
+  matchId: string,
+  updates: Partial<KnockoutMatch>
+): Promise<void> {
+  const payload = cleanUndefined({ ...updates } as unknown as Record<string, unknown>);
+  await setDoc(doc(db, "knockoutMatches", matchId), payload, { merge: true });
+}
+
+export async function getKnockoutMatchPrediction(
+  uid: string,
+  matchId: string
+): Promise<KnockoutMatchPrediction | null> {
+  const snap = await getDoc(doc(db, "matchPredictions", `${uid}_${matchId}`));
+  return snap.exists() ? (snap.data() as KnockoutMatchPrediction) : null;
 }

@@ -14,6 +14,11 @@ import type { Match, MatchRound, MatchStatus, ScoreLine } from "@/types";
 
 const NAV_CARDS = [
   {
+    title: "Jogos eliminatórios",
+    description: "Gerir jogos M73–M104, odds, apostas e notificações.",
+    href: "/admin/jogos",
+  },
+  {
     title: "Convites e participantes",
     description: "Gerar códigos de acesso e gerir utilizadores pendentes.",
     href: "/admin/convites",

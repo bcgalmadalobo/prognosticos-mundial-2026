@@ -250,3 +250,67 @@ export interface NotificationLog {
   oneSignalResponse: Record<string, unknown>;
   status: "sent" | "failed";
 }
+
+// ── Knockout match types (Phase 7A) ──────────────────────────────────────────
+
+export type KnockoutRound =
+  | "round_of_32"
+  | "round_of_16"
+  | "quarter_final"
+  | "semi_final"
+  | "third_place"
+  | "final";
+
+export type KnockoutMatchStatus = "scheduled" | "live" | "finished";
+export type KnockoutResult90 = "teamA" | "draw" | "teamB";
+export type KnockoutNotificationStatus = "pending" | "sent" | "failed";
+
+export interface KnockoutMatchSeed {
+  id: string;
+  matchNumber: number;
+  round: KnockoutRound;
+  slotA: string;
+  slotB: string;
+  startsAt: string;            // ISO 8601 UTC — use for all deadline/notification logic
+  displayTimePortugal: string; // UTC+1 display only, never for calculations
+  timezoneNote: string;
+  sourceNote: string;
+  venue: string;
+  city: string;
+  country: string;
+}
+
+export interface KnockoutMatch extends KnockoutMatchSeed {
+  teamA: string | null;
+  teamB: string | null;
+  teamAName?: string;
+  teamBName?: string;
+  bettingOpen: boolean;
+  status: KnockoutMatchStatus;
+  timeTBD: boolean;
+  oddsTeamA?: number;
+  oddsDraw?: number;
+  oddsTeamB?: number;
+  result90?: KnockoutResult90;
+  resultFinal?: {
+    scoreTeamA: number;
+    scoreTeamB: number;
+  };
+  winnerTeamId?: string;
+  notificationScheduledAt?: string | null;
+  notificationSentAt?: string | null;
+  notificationStatus?: KnockoutNotificationStatus;
+}
+
+export interface KnockoutMatchPrediction {
+  uid: string;
+  matchId: string;
+  round: KnockoutRound;
+  result90: KnockoutResult90;
+  qualifierTeamId: string;
+  scoreFinalTeamA?: number;
+  scoreFinalTeamB?: number;
+  submittedAt?: unknown;
+  updatedAt?: unknown;
+  points?: number;
+}
