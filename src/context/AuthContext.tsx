@@ -3,6 +3,7 @@
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { initOneSignal } from "@/lib/onesignal";
 import { auth, db } from "@/lib/firebase";
 import type { AppUser } from "@/types";
 
@@ -43,6 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubAuth();
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.uid) void initOneSignal(user.uid);
+  }, [user?.uid]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
