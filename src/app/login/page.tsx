@@ -4,7 +4,6 @@ import { FormEvent, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/Button";
-import { Card } from "@/components/Card";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
@@ -23,7 +22,7 @@ export default function LoginPage() {
     setError("");
 
     if (mode === "register" && password !== confirmPassword) {
-      setError("As passwords nao coincidem.");
+      setError("As passwords não coincidem.");
       return;
     }
 
@@ -43,71 +42,141 @@ export default function LoginPage() {
     }
   }
 
+  function switchMode(next: "login" | "register") {
+    setMode(next);
+    setError("");
+  }
+
+  const inputClass =
+    "w-full rounded-xl border border-pitch-500 bg-pitch-700 px-4 py-3 text-pitch-50 placeholder-pitch-400 focus:outline-none focus:border-neon-500 focus:ring-1 focus:ring-neon-500 transition-colors";
+
   return (
-    <main className="mx-auto max-w-md p-4 pt-10">
-      <div className="mb-6 flex flex-col items-center gap-2">
+    <main className="min-h-screen bg-pitch-gradient flex flex-col items-center justify-center px-4 py-12">
+      <div className="mb-8 flex flex-col items-center gap-3">
         <Image
           src="/worldcup-logo.png.png"
           alt="Logo da competição"
-          width={80}
-          height={80}
-          className="h-16 w-auto max-w-[80px] object-contain"
+          width={96}
+          height={96}
+          className="h-20 w-auto object-contain drop-shadow-lg"
         />
-        <p className="text-sm font-semibold text-pitch-200 tracking-wide">
-          Prognósticos Mundial 2026
-        </p>
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-pitch-50 tracking-wide">Prognósticos</h1>
+          <p className="text-sm text-pitch-300 tracking-widest uppercase">Mundial 2026</p>
+        </div>
       </div>
-      <Card title={mode === "login" ? "Entrar" : "Criar conta"}>
-        <form onSubmit={onSubmit} className="space-y-3">
-          {mode === "register" && (
-            <input
-              className="w-full rounded-xl border p-3"
-              placeholder="Nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          )}
-          <input
-            className="w-full rounded-xl border p-3"
-            placeholder="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            className="w-full rounded-xl border p-3"
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          {mode === "register" && (
-            <input
-              className="w-full rounded-xl border p-3"
-              placeholder="Confirmar password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          )}
-          {error && (
-            <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>
-          )}
-          <Button disabled={busy} className="w-full">
-            {busy ? "Aguarda..." : mode === "login" ? "Entrar" : "Criar conta"}
-          </Button>
-        </form>
-        <button
-          className="mt-4 text-sm text-neon-400"
-          onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(""); }}
-        >
-          {mode === "login" ? "Ainda nao tenho conta" : "Ja tenho conta"}
-        </button>
-      </Card>
+
+      <div className="w-full max-w-sm rounded-2xl border border-pitch-500 bg-pitch-800 shadow-card overflow-hidden">
+        <div className="flex border-b border-pitch-500">
+          {(["login", "register"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => switchMode(m)}
+              className={[
+                "flex-1 py-3 text-sm font-semibold transition-colors duration-150",
+                mode === m
+                  ? "text-neon-400 border-b-2 border-neon-500 bg-pitch-800"
+                  : "text-pitch-300 hover:text-pitch-100 bg-pitch-700",
+              ].join(" ")}
+            >
+              {m === "login" ? "Entrar" : "Criar conta"}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6">
+          <form onSubmit={onSubmit} className="space-y-4">
+            {mode === "register" && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-pitch-300 uppercase tracking-wide">
+                  Nome
+                </label>
+                <input
+                  className={inputClass}
+                  placeholder="O teu nome"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-pitch-300 uppercase tracking-wide">
+                Email
+              </label>
+              <input
+                className={inputClass}
+                placeholder="o-teu@email.com"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-pitch-300 uppercase tracking-wide">
+                Password
+              </label>
+              <input
+                className={inputClass}
+                placeholder="••••••••"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {mode === "register" && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-pitch-300 uppercase tracking-wide">
+                  Confirmar password
+                </label>
+                <input
+                  className={inputClass}
+                  placeholder="••••••••"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-start gap-2 rounded-xl border border-red-500/40 bg-red-900/20 px-4 py-3">
+                <span className="text-red-400 mt-0.5 shrink-0">⚠</span>
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+
+            <Button disabled={busy} size="lg" className="w-full mt-1">
+              {busy ? (
+                <>
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle
+                      className="opacity-25"
+                      cx="12" cy="12" r="10"
+                      stroke="currentColor" strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                  {mode === "login" ? "A entrar..." : "A criar conta..."}
+                </>
+              ) : (
+                mode === "login" ? "Entrar" : "Criar conta"
+              )}
+            </Button>
+          </form>
+        </div>
+      </div>
     </main>
   );
 }
