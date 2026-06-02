@@ -26,6 +26,14 @@ export default function AdminJogosPage() {
   const [seedMsg, setSeedMsg] = useState("");
   const [seedErr, setSeedErr] = useState("");
   const [seeding, setSeeding] = useState(false);
+  const [recalcBusy, setRecalcBusy] = useState(false);
+  const [recalcResult, setRecalcResult] = useState<{
+    matchesProcessed: number;
+    predictionsProcessed: number;
+    usersUpdated: number;
+    warnings: string[];
+  } | null>(null);
+  const [recalcErr, setRecalcErr] = useState("");
 
   async function fetchMatches() {
     try {
@@ -46,6 +54,39 @@ export default function AdminJogosPage() {
     fetchMatches().finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleRecalc() {
+    setRecalcBusy(true);
+    setRecalcResult(null);
+    setRecalcErr("");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setRecalcErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch("/api/admin/recalculate-knockout-points", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json() as {
+        success?: boolean;
+        matchesProcessed?: number;
+        predictionsProcessed?: number;
+        usersUpdated?: number;
+        warnings?: string[];
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Erro desconhecido.");
+      setRecalcResult({
+        matchesProcessed: data.matchesProcessed ?? 0,
+        predictionsProcessed: data.predictionsProcessed ?? 0,
+        usersUpdated: data.usersUpdated ?? 0,
+        warnings: data.warnings ?? [],
+      });
+    } catch (e) {
+      setRecalcErr(e instanceof Error ? e.message : "Erro desconhecido.");
+    } finally {
+      setRecalcBusy(false);
+    }
+  }
 
   async function handleSeed() {
     setSeedMsg("");
@@ -98,6 +139,43 @@ export default function AdminJogosPage() {
             {seedErr}
           </div>
         )}
+
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-pitch-100">Recalcular pontos eliminatórios</p>
+            <p className="text-xs text-pitch-400">Recalcula matchPredictions e leaderboard a partir dos jogos com status "finished".</p>
+          </div>
+          <Button onClick={handleRecalc} disabled={recalcBusy} variant="secondary">
+            {recalcBusy ? "A calcular…" : "Recalcular pontos"}
+          </Button>
+        </div>
+
+        {recalcResult && (
+          <div className="rounded-xl border border-green-500/30 bg-green-900/30 p-4 text-sm">
+            <p className="font-semibold text-green-400 mb-2">Recálculo concluído</p>
+            <ul className="space-y-1 text-pitch-200">
+              <li>Jogos processados: <span className="font-mono text-pitch-50">{recalcResult.matchesProcessed}</span></li>
+              <li>Apostas processadas: <span className="font-mono text-pitch-50">{recalcResult.predictionsProcessed}</span></li>
+              <li>Utilizadores atualizados: <span className="font-mono text-pitch-50">{recalcResult.usersUpdated}</span></li>
+            </ul>
+            {recalcResult.warnings.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-yellow-400 mb-1">Avisos ({recalcResult.warnings.length})</p>
+                <ul className="space-y-0.5">
+                  {recalcResult.warnings.map((w, i) => (
+                    <li key={i} className="text-xs text-yellow-300 font-mono">{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {recalcErr && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            {recalcErr}
+          </div>
+        )}
+
         {loadErr && (
           <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
             {loadErr}

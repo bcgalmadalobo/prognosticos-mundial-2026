@@ -6,7 +6,7 @@ import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { defaultScoring } from "@/data/defaultScoring";
 import { getScoringSettings, saveScoringSettings } from "@/lib/db";
-import type { MatchRound, ScoringSettings } from "@/types";
+import type { KnockoutRound, ScoringSettings } from "@/types";
 
 const INITIAL_FIELDS: { key: keyof ScoringSettings["initial"]; label: string }[] = [
   { key: "winner",           label: "Vencedor" },
@@ -25,11 +25,12 @@ const INITIAL_FIELDS: { key: keyof ScoringSettings["initial"]; label: string }[]
   { key: "groupPosition",    label: "Posição correta no grupo (por posição)" },
 ];
 
-const KNOCKOUT_ROUNDS: { key: MatchRound; label: string }[] = [
+const KNOCKOUT_ROUNDS: { key: KnockoutRound; label: string }[] = [
   { key: "round_of_32", label: "16-avos (Round of 32)" },
   { key: "round_of_16", label: "Oitavos" },
   { key: "quarter_final", label: "Quartos" },
   { key: "semi_final", label: "Meias" },
+  { key: "third_place", label: "3.º/4.º Lugar (M103)" },
   { key: "final", label: "Final" },
 ];
 
@@ -62,8 +63,8 @@ export default function PontuacaoPage() {
   }
 
   function setKnockout(
-    round: MatchRound,
-    field: keyof ScoringSettings["knockout"][MatchRound],
+    round: KnockoutRound,
+    field: keyof ScoringSettings["knockout"][KnockoutRound],
     raw: string
   ) {
     const value = Number(raw);

@@ -1,6 +1,8 @@
 import type {
   InitialActuals,
   InitialPrediction,
+  KnockoutMatch,
+  KnockoutMatchPrediction,
   Match,
   MatchPrediction,
   Outcome90,
@@ -69,6 +71,48 @@ export function getOutcome90(result90?: ScoreLine): Outcome90 | null {
 
 export function sameScore(a?: ScoreLine, b?: ScoreLine) {
   return Boolean(a && b && a.homeGoals === b.homeGoals && a.awayGoals === b.awayGoals);
+}
+
+export function calculateKnockoutMatchPredictionPoints(
+  prediction: KnockoutMatchPrediction,
+  match: KnockoutMatch,
+  settings: ScoringSettings["knockout"]
+): { points: number; breakdown: { oddsPoints: number; qualifiedTeamPoints: number; scoreExactPoints: number } } {
+  const roundSettings = settings[match.round];
+  const breakdown = { oddsPoints: 0, qualifiedTeamPoints: 0, scoreExactPoints: 0 };
+
+  if (!roundSettings) return { points: 0, breakdown };
+
+  if (match.result90 && prediction.result90 === match.result90) {
+    let odd: number | undefined;
+    if (prediction.result90 === "teamA") odd = match.oddsTeamA;
+    else if (prediction.result90 === "draw") odd = match.oddsDraw;
+    else odd = match.oddsTeamB;
+
+    if (odd && odd > 0) {
+      breakdown.oddsPoints = Number((odd * roundSettings.oddsMultiplier).toFixed(1));
+    }
+  }
+
+  if (match.winnerTeamId && prediction.qualifierTeamId === match.winnerTeamId) {
+    breakdown.qualifiedTeamPoints = roundSettings.qualifiedTeamPoints;
+  }
+
+  if (
+    roundSettings.scoreExactPoints > 0 &&
+    match.resultFinal !== undefined &&
+    prediction.scoreFinalTeamA !== undefined &&
+    prediction.scoreFinalTeamB !== undefined &&
+    prediction.scoreFinalTeamA === match.resultFinal.scoreTeamA &&
+    prediction.scoreFinalTeamB === match.resultFinal.scoreTeamB
+  ) {
+    breakdown.scoreExactPoints = roundSettings.scoreExactPoints;
+  }
+
+  const points = Number(
+    (breakdown.oddsPoints + breakdown.qualifiedTeamPoints + breakdown.scoreExactPoints).toFixed(1)
+  );
+  return { points, breakdown };
 }
 
 export function calculateMatchPredictionPoints(

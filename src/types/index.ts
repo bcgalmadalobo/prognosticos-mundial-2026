@@ -226,7 +226,7 @@ export interface RoundScoringSettings {
 
 export interface ScoringSettings {
   initial: InitialScoringSettings;
-  knockout: Record<MatchRound, RoundScoringSettings>;
+  knockout: Record<KnockoutRound, RoundScoringSettings>;
 }
 
 export interface LeaderboardEntry {

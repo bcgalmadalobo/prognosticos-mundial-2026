@@ -18,7 +18,8 @@
       "WebSearch",
       "WebFetch(domain:www.fifa.com)",
       "WebFetch(domain:en.wikipedia.org)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(xargs grep -l \"knockoutPoints\\\\|recalculate.*knockout\\\\|calculateMatchPredictionPoints\")"
     ]
   }
 }

@@ -22,6 +22,7 @@ export const defaultScoring: ScoringSettings = {
     round_of_16: { oddsMultiplier: 2, qualifiedTeamPoints: 1, scoreExactPoints: 0 },
     quarter_final: { oddsMultiplier: 3, qualifiedTeamPoints: 2, scoreExactPoints: 10 },
     semi_final: { oddsMultiplier: 5, qualifiedTeamPoints: 5, scoreExactPoints: 15 },
+    third_place: { oddsMultiplier: 3, qualifiedTeamPoints: 3, scoreExactPoints: 10 },
     final: { oddsMultiplier: 5, qualifiedTeamPoints: 5, scoreExactPoints: 25 },
   },
 };
