@@ -57,52 +57,24 @@ Knockout defaults:
 - semi_final: odds x5 + 5 for qualified team + 15 exact score after 120 minutes
 - final: odds x5 + 5 for qualified team + 25 exact score after 120 minutes
 
-# Especificação final obrigatória
+## Estado atual (junho 2026)
 
-Antes de implementar novas funcionalidades, ler obrigatoriamente o ficheiro SPEC.md.
+A app está online na Vercel.
 
-A app final não é apenas um CRUD simples.
-É uma PWA privada de prognósticos do Mundial 2026 com:
-- convites individuais;
-- simulador inicial completo;
-- grupos ordenáveis;
-- melhores terceiros lugares;
-- bracket automático;
-- aposta inicial bloqueada;
-- pontuação completa;
-- jogos reais das eliminatórias;
-- notificações;
-- ranking automático.
+### Implementado
 
-Prioridade imediata:
-1. implementar sistema de convites individuais;
-2. bloquear registo livre;
-3. criar página admin para gerir convites;
-4. depois implementar o simulador inicial.
+- **Convites**: utilizador cria conta → fica `pending_access_code` → admin gera código em `/admin/convites` → utilizador ativa em `/ativar`
+- **Aposta inicial** (`/aposta-inicial`): grupos (drag-and-drop), melhores terceiros, bracket, 3.º/4.º lugar, prémios individuais, submissão para Firestore, edição até deadline configurável
+- **Pontuação**: resultados iniciais em `/admin/resultados`, `scoringSettings`, editor em `/admin/pontuacao`, recálculo de `initialPoints`
+- **Admin**: dashboard `/admin`, convites, resultados, pontuação, configurações (`/admin/configuracoes`)
+- **Design**: Fase 5A implementada (paleta escura, componentes `Button`/`Card`, `NavBar` desktop + mobile)
 
-Não continuar a desenvolver importação CSV simples antes de concluir o sistema de convites.
+### Próximo foco recomendado
 
-# Especificação final obrigatória
+Melhorar visualmente `/aposta-inicial` (correções visuais Fase 5B).
 
-Antes de implementar novas funcionalidades, ler obrigatoriamente o ficheiro SPEC.md.
+### Ainda por implementar (ver SPEC.md)
 
-A app final não é apenas um CRUD simples.
-É uma PWA privada de prognósticos do Mundial 2026 com:
-- convites individuais;
-- simulador inicial completo;
-- grupos ordenáveis;
-- melhores terceiros lugares;
-- bracket automático;
-- aposta inicial bloqueada;
-- pontuação completa;
-- jogos reais das eliminatórias;
-- notificações;
-- ranking automático.
-
-Prioridade imediata:
-1. implementar sistema de convites individuais;
-2. bloquear registo livre;
-3. criar página admin para gerir convites;
-4. depois implementar o simulador inicial.
-
-Não continuar a desenvolver importação CSV simples antes de concluir o sistema de convites.
+- Jogos reais das eliminatórias (apostas, odds, resultados)
+- Notificações OneSignal
+- Ranking automático diário

@@ -4,6 +4,23 @@ A low-cost PWA for a private World Cup 2026 prediction game among friends.
 
 > **Dados das seleções atualizados para os grupos finais do Mundial 2026** (48 equipas, 12 grupos oficiais).
 
+## Estado do projeto (junho 2026)
+
+| Funcionalidade | Estado |
+|---|---|
+| App online na Vercel | ✅ Concluído |
+| Sistema de convites (duas etapas) | ✅ Concluído |
+| Aposta inicial: grupos, terceiros, bracket, prémios | ✅ Concluído |
+| Submissão para Firestore com edição até deadline | ✅ Concluído |
+| Pontuação: editor, scoringSettings, recálculo | ✅ Concluído |
+| Admin: dashboard, convites, resultados, configurações | ✅ Concluído |
+| Design Fase 5A (paleta escura, componentes base) | ✅ Iniciado — correções visuais em curso |
+| Melhorias visuais `/aposta-inicial` | 🔜 Próximo foco |
+| Jogos reais das eliminatórias + apostas | ⏳ Pendente |
+| Odds automáticas / fallback manual | ⏳ Pendente |
+| Notificações OneSignal | ⏳ Pendente |
+| Ranking automático diário | ⏳ Pendente |
+
 This starter includes:
 
 - Next.js + TypeScript + Tailwind

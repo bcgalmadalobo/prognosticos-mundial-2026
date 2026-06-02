@@ -170,10 +170,10 @@ function formatDeadlineDisplay(d: Date): string {
 // ── Summary (read-only) ───────────────────────────────────────────────────────
 
 function SummaryTeam({ teamId }: { teamId?: string | null }) {
-  if (!teamId) return <span className="text-slate-400">—</span>;
+  if (!teamId) return <span className="text-pitch-400">—</span>;
   const team = TEAMS[teamId];
   return (
-    <span className="flex items-center gap-1.5 text-sm font-medium text-slate-900">
+    <span className="flex items-center gap-1.5 text-sm font-medium text-pitch-50">
       {team?.flag && <span>{team.flag}</span>}
       <span>{team?.name ?? teamId}</span>
     </span>
@@ -214,16 +214,16 @@ function PredictionSummary({
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       {isLocked ? (
-        <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
-          <p className="text-lg font-bold text-green-800">Aposta fechada</p>
-          <p className="mt-1 text-sm text-green-700">{lockedMessage}</p>
+        <div className="mb-6 rounded-2xl border border-neon-500/30 bg-pitch-700 p-5 text-center">
+          <p className="text-lg font-bold text-neon-400">Aposta fechada</p>
+          <p className="mt-1 text-sm text-pitch-300">{lockedMessage}</p>
         </div>
       ) : (
-        <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50 p-5">
-          <p className="text-base font-bold text-brand-900">Aposta guardada</p>
-          <p className="mt-1 text-sm text-brand-700">
+        <div className="mb-6 rounded-2xl border border-pitch-500 bg-pitch-700 p-5">
+          <p className="text-base font-bold text-pitch-50">Aposta guardada</p>
+          <p className="mt-1 text-sm text-pitch-300">
             Podes editar a tua aposta até{" "}
-            <strong>{deadlineDisplay}</strong>.
+            <strong className="text-pitch-50">{deadlineDisplay}</strong>.
           </p>
           <Button
             type="button"
@@ -235,29 +235,29 @@ function PredictionSummary({
         </div>
       )}
 
-      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">
+      <div className="mb-4 rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card">
+        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-pitch-400">
           Fase Final
         </h2>
         <div className="space-y-3">
           {standings.map(({ label, teamId }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">{label}</span>
+              <span className="text-sm text-pitch-300">{label}</span>
               <SummaryTeam teamId={teamId} />
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-500">
+      <div className="rounded-2xl border border-pitch-500 bg-pitch-800 p-5 shadow-card">
+        <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-pitch-400">
           Prémios Individuais
         </h2>
         <div className="space-y-3">
           {awardRows.map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
-              <span className="text-sm text-slate-500">{label}</span>
-              <span className="text-sm font-medium text-slate-900">
+              <span className="text-sm text-pitch-300">{label}</span>
+              <span className="text-sm font-medium text-pitch-50">
                 {value || "—"}
               </span>
             </div>
@@ -623,9 +623,9 @@ export default function ApostaInicialPage() {
       return (
         <Protected>
           <main className="mx-auto max-w-2xl px-4 py-6">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
-              <p className="text-base font-bold text-red-800">Aposta desatualizada</p>
-              <p className="mt-2 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-800/30 bg-red-900/10 p-5 text-center">
+              <p className="text-base font-bold text-red-400">Aposta desatualizada</p>
+              <p className="mt-2 text-sm text-red-400">
                 A tua aposta anterior contém seleções que já não participam neste Mundial. O prazo para resubmeter já terminou.
               </p>
             </div>
@@ -652,11 +652,11 @@ export default function ApostaInicialPage() {
     return (
       <Protected>
         <main className="mx-auto max-w-2xl px-4 py-6">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
-            <p className="text-base font-bold text-slate-700">
+          <div className="rounded-2xl border border-pitch-500 bg-pitch-800 p-6 text-center">
+            <p className="text-base font-bold text-pitch-100">
               {isClosed ? "Aposta fechada" : "Prazo terminado"}
             </p>
-            <p className="mt-1 text-sm text-slate-500">{noSubmitMessage}</p>
+            <p className="mt-1 text-sm text-pitch-300">{noSubmitMessage}</p>
           </div>
         </main>
       </Protected>
@@ -684,22 +684,22 @@ export default function ApostaInicialPage() {
       <main className="mx-auto max-w-5xl px-4 py-6">
         {/* Stale localStorage draft cleared */}
         {draftWasCleared && (
-          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
             O rascunho antigo foi limpo porque os dados das seleções foram atualizados.
           </div>
         )}
 
         {/* Incompatible Firestore prediction — prompt to resubmit */}
         {firestorePredictionIncompatible && (
-          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
             <strong>A tua aposta anterior contém seleções desatualizadas.</strong> Preenche e submete uma nova aposta com as seleções atuais.
           </div>
         )}
 
         {/* Deadline info banner */}
-        <div className="mb-5 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-700">
+        <div className="mb-5 rounded-xl border border-neon-500/30 bg-pitch-700 px-4 py-3 text-sm text-neon-400">
           Podes editar a tua aposta até{" "}
-          <strong>{deadlineDisplay}</strong>.
+          <strong className="text-pitch-50">{deadlineDisplay}</strong>.
         </div>
 
         {/* Page header */}
@@ -779,11 +779,11 @@ export default function ApostaInicialPage() {
         {/* Submit section */}
         <div className="mt-8 space-y-4">
           {!isValid && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <p className="mb-2 text-xs font-semibold text-amber-700">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <p className="mb-2 text-xs font-semibold text-amber-400">
                 Para submeter, completa:
               </p>
-              <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-700">
+              <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-400">
                 {validationErrors.map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
@@ -801,16 +801,16 @@ export default function ApostaInicialPage() {
               {existingPrediction ? "Guardar alterações" : "Submeter aposta"}
             </Button>
           ) : (
-            <div className="rounded-2xl border border-brand-200 bg-brand-50 p-5">
-              <h3 className="mb-1 text-sm font-bold text-brand-900">
+            <div className="rounded-2xl border border-pitch-500 bg-pitch-700 p-5">
+              <h3 className="mb-1 text-sm font-bold text-pitch-50">
                 {existingPrediction ? "Confirmar alterações" : "Confirmar aposta"}
               </h3>
-              <p className="mb-4 text-xs text-brand-700">
+              <p className="mb-4 text-xs text-pitch-300">
                 As tuas escolhas serão guardadas. Podes ainda editar até{" "}
-                <strong>{deadlineDisplay}</strong>.
+                <strong className="text-pitch-50">{deadlineDisplay}</strong>.
               </p>
               {submitError && (
-                <p className="mb-3 text-xs font-semibold text-red-600">
+                <p className="mb-3 text-xs font-semibold text-red-400">
                   {submitError}
                 </p>
               )}
@@ -830,7 +830,7 @@ export default function ApostaInicialPage() {
                     setSubmitError(null);
                   }}
                   disabled={submitting}
-                  className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-pitch-500 bg-pitch-600 py-2.5 text-sm font-semibold text-pitch-200 hover:bg-pitch-500 disabled:opacity-60"
                 >
                   Cancelar
                 </button>

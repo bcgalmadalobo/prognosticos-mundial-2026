@@ -267,28 +267,33 @@ Prognósticos Mundial 2026
 
 ## Prioridades de implementação
 
-Fase 1:
-- sistema de convites individuais;
-- bloquear acesso sem convite;
-- admin cria convites.
+Fase 1 — ✅ Concluída:
+- sistema de convites individuais (fluxo em duas etapas);
+- bloquear acesso sem código de ativação;
+- admin cria e gera códigos em `/admin/convites`.
 
-Fase 2:
-- simulador da aposta inicial;
-- grupos com drag and drop;
+Fase 2 — ✅ Concluída:
+- simulador da aposta inicial (`/aposta-inicial`);
+- grupos com drag-and-drop;
 - terceiros lugares;
-- bracket;
-- submissão bloqueada.
+- bracket automático;
+- prémios individuais;
+- submissão para Firestore com edição até deadline configurável.
 
-Fase 3:
-- pontuação completa da aposta inicial.
+Fase 3 — ✅ Concluída:
+- pontuação completa da aposta inicial;
+- editor de pontuação em `/admin/pontuacao`;
+- `scoringSettings` no Firestore;
+- recálculo de `initialPoints` em `/admin/resultados`.
 
-Fase 4:
+Fase 4 — ⏳ Pendente:
 - jogos reais das eliminatórias;
-- odds;
-- resultados;
-- notificações.
+- odds (automáticas + fallback manual no admin);
+- resultados (automáticos + fallback manual no admin);
+- notificações OneSignal.
 
-Fase 5:
-- ranking automático diário;
-- deploy final;
-- melhoria visual.
+Fase 5 — 🔄 Em curso:
+- deploy na Vercel — ✅ feito;
+- design system global (Fase 5A) — ✅ implementado, correções visuais em curso;
+- melhorias visuais `/aposta-inicial` — 🔜 próximo foco;
+- ranking automático diário — ⏳ pendente.

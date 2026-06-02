@@ -40,8 +40,8 @@ export function GroupCard({ letter, teamIds, onChange }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
-      <h3 className="mb-2.5 text-center text-xs font-bold uppercase tracking-widest text-slate-400">
+    <div className="rounded-2xl border border-pitch-500 bg-pitch-800 p-3 shadow-card">
+      <h3 className="mb-2.5 text-center text-xs font-bold uppercase tracking-widest text-neon-500">
         Grupo {letter}
       </h3>
       <DndContext

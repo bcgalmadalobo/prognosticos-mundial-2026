@@ -14,15 +14,21 @@ interface Props {
 }
 
 const borderByStatus: Record<string, string> = {
-  qualified: "border-emerald-200",
-  eliminated: "border-red-100",
-  default: "border-slate-100",
+  qualified: "border-brand-600",
+  eliminated: "border-pitch-500",
+  default: "border-pitch-500",
 };
 
 const bgByStatus: Record<string, string> = {
-  qualified: "bg-emerald-50",
-  eliminated: "bg-red-50/50",
-  default: "bg-white",
+  qualified: "bg-pitch-700",
+  eliminated: "bg-pitch-800",
+  default: "bg-pitch-700",
+};
+
+const nameByStatus: Record<string, string> = {
+  qualified: "text-pitch-50",
+  eliminated: "text-pitch-300",
+  default: "text-pitch-100",
 };
 
 export function SortableTeamRow({ id, name, flag, position, status, badge }: Props) {
@@ -45,18 +51,18 @@ export function SortableTeamRow({ id, name, flag, position, status, badge }: Pro
         isDragging ? "opacity-40 shadow-xl" : "shadow-sm"
       }`}
     >
-      <span className="w-4 shrink-0 text-center text-xs font-bold text-slate-400">
+      <span className="w-4 shrink-0 text-center text-xs font-bold text-pitch-400">
         {position}
       </span>
       <span className="text-lg leading-none">{flag}</span>
-      <span className="flex-1 text-sm font-medium text-slate-800">{name}</span>
+      <span className={`flex-1 text-sm font-medium ${nameByStatus[key]}`}>{name}</span>
       {badge && (
-        <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">
+        <span className="shrink-0 rounded bg-pitch-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-pitch-200">
           {badge}
         </span>
       )}
       <button
-        className="shrink-0 cursor-grab touch-none text-slate-300 active:cursor-grabbing"
+        className="shrink-0 cursor-grab touch-none text-pitch-400 active:cursor-grabbing"
         aria-label={`Arrastar ${name}`}
         {...attributes}
         {...listeners}

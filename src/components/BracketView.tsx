@@ -50,10 +50,10 @@ function TeamBtn({
   const cls = [
     "flex w-full items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
     disabled
-      ? "cursor-not-allowed bg-slate-50 text-slate-400"
+      ? "cursor-not-allowed bg-pitch-700 text-pitch-500"
       : isWinner
-        ? "bg-brand-600 text-white shadow-sm"
-        : "cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200",
+        ? "bg-brand-600 text-white shadow-glow"
+        : "cursor-pointer bg-pitch-700 text-pitch-200 hover:bg-pitch-600",
   ].join(" ");
 
   return (
@@ -75,8 +75,8 @@ function MatchCard({
   const ready = !!match.teamA && !!match.teamB;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
-      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-slate-400">
+    <div className="rounded-xl border border-pitch-500 bg-pitch-800 p-2.5 shadow-card">
+      <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-pitch-400">
         {match.id}
       </p>
       <div className="flex flex-col gap-1">
@@ -87,7 +87,7 @@ function MatchCard({
           disabled={!ready}
           onClick={() => match.teamA && onChoice(match.id, match.teamA)}
         />
-        <p className="text-center text-[10px] text-slate-400">vs</p>
+        <p className="text-center text-[10px] text-pitch-500">vs</p>
         <TeamBtn
           teamId={match.teamB}
           label={match.labelB}
