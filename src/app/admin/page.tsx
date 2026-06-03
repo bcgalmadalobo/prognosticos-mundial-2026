@@ -24,6 +24,11 @@ const NAV_CARDS = [
     href: "/admin/convites",
   },
   {
+    title: "Participantes",
+    description: "Ver todos os utilizadores, estados, apostas e notificações.",
+    href: "/admin/participantes",
+  },
+  {
     title: "Resultados da aposta inicial",
     description: "Inserir resultados reais do torneio e recalcular pontos.",
     href: "/admin/resultados",
