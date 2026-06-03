@@ -21,6 +21,7 @@ export interface AppUser {
   inviteCode?: string;
   hasSubmittedInitialPrediction?: boolean;
   oneSignalId?: string;
+  phoneNumber?: string;
   createdAt?: unknown;
 }
 

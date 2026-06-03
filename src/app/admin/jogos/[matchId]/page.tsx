@@ -1,13 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { use } from "react";
 import Link from "next/link";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
-import { ROUND_LABELS } from "@/lib/matchPredictionValidation";
+import { ROUND_LABELS, bettingDeadline } from "@/lib/matchPredictionValidation";
 import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90 } from "@/types";
 
 const inputCls =
@@ -16,6 +16,41 @@ const selectCls =
   "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
 
 interface PageProps { params: Promise<{ matchId: string }> }
+
+function formatIso(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return iso;
+  }
+}
+
+function NotifStatusBadge({ status }: { status?: string | null }) {
+  if (!status || status === "pending") {
+    return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">Pendente</span>;
+  }
+  if (status === "sending") {
+    return <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-400">A enviar…</span>;
+  }
+  if (status === "sent") {
+    return <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">Enviada</span>;
+  }
+  if (status === "failed") {
+    return <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Falhou</span>;
+  }
+  return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">{status}</span>;
+}
+
+function computeDeadlinePreview(startsAt: string): string | null {
+  try {
+    const d = bettingDeadline(startsAt);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return null;
+  }
+}
 
 export default function AdminMatchEditPage({ params }: PageProps) {
   const { matchId } = use(params);
@@ -27,6 +62,7 @@ export default function AdminMatchEditPage({ params }: PageProps) {
   const [notifyMsg, setNotifyMsg] = useState("");
   const [notifyErr, setNotifyErr] = useState("");
   const [notifying, setNotifying] = useState(false);
+  const [deadlinePreview, setDeadlinePreview] = useState<string | null>(null);
 
   async function fetchMatch() {
     try {
@@ -50,6 +86,21 @@ export default function AdminMatchEditPage({ params }: PageProps) {
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId]);
+
+  useEffect(() => {
+    if (!match?.startsAt) return;
+    setDeadlinePreview(computeDeadlinePreview(match.startsAt));
+  }, [match?.startsAt]);
+
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(""), 4000);
+    return () => clearTimeout(t);
+  }, [msg]);
+
+  function handleStartsAtChange(e: ChangeEvent<HTMLInputElement>) {
+    setDeadlinePreview(computeDeadlinePreview(e.target.value.trim()));
+  }
 
   async function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -107,7 +158,7 @@ export default function AdminMatchEditPage({ params }: PageProps) {
       });
       const data = await res.json() as { ok?: boolean; match?: KnockoutMatch; error?: string; details?: string };
       if (!res.ok) throw new Error(data.error ?? "Erro ao guardar.");
-      setMsg("Guardado.");
+      setMsg("Guardado com sucesso.");
       if (data.match) setMatch(data.match);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Erro ao guardar.");
@@ -145,10 +196,13 @@ export default function AdminMatchEditPage({ params }: PageProps) {
   if (loadErr) return <Protected adminOnly><main className="p-4 text-red-400">{loadErr}</main></Protected>;
   if (!match) return <Protected adminOnly><main className="p-4 text-pitch-400">Jogo não encontrado.</main></Protected>;
 
+  const slotALabel = match.teamAName ?? match.slotA;
+  const slotBLabel = match.teamBName ?? match.slotB;
+
   return (
     <Protected adminOnly>
-      <main className="mx-auto max-w-3xl space-y-6 p-4">
-        <div className="flex items-center gap-3">
+      <main className="mx-auto max-w-3xl space-y-6 p-4 pb-10">
+        <div className="flex flex-wrap items-center gap-3">
           <Link href="/admin/jogos" className="text-sm text-pitch-400 hover:text-neon-400">← Jogos</Link>
           <span className="text-pitch-600">/</span>
           <h1 className="text-xl font-bold text-pitch-50">{match.id}</h1>
@@ -157,18 +211,31 @@ export default function AdminMatchEditPage({ params }: PageProps) {
           </span>
         </div>
 
+        {/* Read-only match info */}
         <div className="rounded-xl border border-pitch-600 bg-pitch-800/50 p-3 text-xs text-pitch-400 space-y-0.5">
           <p><span className="text-pitch-300">Slots:</span> {match.slotA} vs {match.slotB}</p>
           <p><span className="text-pitch-300">Venue:</span> {match.venue}, {match.city}, {match.country}</p>
           <p><span className="text-pitch-300">Hora UTC:</span> {match.startsAt}</p>
           <p><span className="text-pitch-300">Portugal:</span> {match.displayTimePortugal}</p>
+          {deadlinePreview && (
+            <p><span className="text-pitch-300">Deadline aposta:</span> <span className="text-amber-300">{deadlinePreview}</span></p>
+          )}
           <p><span className="text-pitch-300">Fonte:</span> {match.sourceNote}</p>
         </div>
 
-        {msg && <div className="rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">{msg}</div>}
-        {err && <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">{err}</div>}
+        {msg && (
+          <div className="rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+            {msg}
+          </div>
+        )}
+        {err && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            {err}
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Equipas */}
           <Card title="Equipas">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -190,9 +257,10 @@ export default function AdminMatchEditPage({ params }: PageProps) {
             </div>
           </Card>
 
-          <Card title="Calendário e estado">
+          {/* Horário & Estado */}
+          <Card title="Horário & Estado">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div>
+              <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-pitch-300">
                   startsAt UTC (ISO 8601)
                 </label>
@@ -201,8 +269,14 @@ export default function AdminMatchEditPage({ params }: PageProps) {
                   className={inputCls}
                   defaultValue={match.startsAt}
                   placeholder="2026-06-28T19:00:00Z"
+                  onChange={handleStartsAtChange}
                 />
-                <p className="mt-1 text-xs text-pitch-500">Altera só se a FIFA mudar a hora. Portugal: {match.displayTimePortugal}</p>
+                <p className="mt-1 text-xs text-pitch-500">
+                  Portugal: {match.displayTimePortugal}
+                  {deadlinePreview && (
+                    <> · <span className="text-amber-400">Deadline apostas: {deadlinePreview}</span></>
+                  )}
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-pitch-300">Estado</label>
@@ -212,7 +286,7 @@ export default function AdminMatchEditPage({ params }: PageProps) {
                   <option value="finished">Terminado</option>
                 </select>
               </div>
-              <div className="flex items-center gap-3 sm:col-span-2">
+              <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   name="bettingOpen"
@@ -221,38 +295,40 @@ export default function AdminMatchEditPage({ params }: PageProps) {
                   defaultChecked={match.bettingOpen}
                 />
                 <label htmlFor="bettingOpen" className="text-sm text-pitch-200">
-                  Apostas abertas (bettingOpen)
+                  Apostas abertas
                 </label>
               </div>
             </div>
           </Card>
 
+          {/* Odds */}
           <Card title="Odds manuais (opcional)">
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd A</label>
+                <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotALabel}</label>
                 <input name="oddsTeamA" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamA ?? ""} placeholder="ex: 2.10" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd Empate</label>
+                <label className="mb-1 block text-xs font-semibold text-pitch-300">Empate</label>
                 <input name="oddsDraw" type="number" step="0.01" className={inputCls} defaultValue={match.oddsDraw ?? ""} placeholder="ex: 3.20" />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">Odd B</label>
+                <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotBLabel}</label>
                 <input name="oddsTeamB" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamB ?? ""} placeholder="ex: 3.50" />
               </div>
             </div>
           </Card>
 
+          {/* Resultado */}
           <Card title="Resultado (preencher após o jogo)">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-pitch-300">Resultado 90 min</label>
                 <select name="result90" className={selectCls} defaultValue={match.result90 ?? ""}>
                   <option value="">— Não definido —</option>
-                  <option value="teamA">Vitória A</option>
+                  <option value="teamA">Vitória A ({slotALabel})</option>
                   <option value="draw">Empate</option>
-                  <option value="teamB">Vitória B</option>
+                  <option value="teamB">Vitória B ({slotBLabel})</option>
                 </select>
               </div>
               <div>
@@ -261,12 +337,14 @@ export default function AdminMatchEditPage({ params }: PageProps) {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-pitch-300">
-                  Golos finais A <span className="font-normal text-pitch-500">(após 120 min se necessário)</span>
+                  Golos finais {slotALabel} <span className="font-normal text-pitch-500">(após 120 min)</span>
                 </label>
                 <input name="scoreFinalTeamA" type="number" min="0" className={inputCls} defaultValue={match.resultFinal?.scoreTeamA ?? ""} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">Golos finais B</label>
+                <label className="mb-1 block text-xs font-semibold text-pitch-300">
+                  Golos finais {slotBLabel}
+                </label>
                 <input name="scoreFinalTeamB" type="number" min="0" className={inputCls} defaultValue={match.resultFinal?.scoreTeamB ?? ""} />
               </div>
             </div>
@@ -277,35 +355,45 @@ export default function AdminMatchEditPage({ params }: PageProps) {
           </div>
         </form>
 
-        <Card title="Notificação">
-          <div className="space-y-3">
-            <div className="text-xs text-pitch-400 space-y-0.5">
-              <p><span className="text-pitch-300">Agendada para:</span> {match.notificationScheduledAt ?? "—"}</p>
-              <p>
-                <span className="text-pitch-300">Estado:</span>{" "}
-                <span className={
-                  match.notificationStatus === "sent" ? "text-green-400" :
-                  match.notificationStatus === "failed" ? "text-red-400" : "text-pitch-400"
-                }>
-                  {match.notificationStatus ?? "pendente"}
-                </span>
-              </p>
+        {/* Notificações */}
+        <Card title="Notificações">
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 text-sm">
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Agendada para</p>
+                <p className="font-medium text-pitch-200">{formatIso(match.notificationScheduledAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Estado</p>
+                <NotifStatusBadge status={match.notificationStatus} />
+              </div>
               {match.notificationSentAt && (
-                <p><span className="text-pitch-300">Enviada em:</span> {String(match.notificationSentAt)}</p>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-pitch-500 mb-1">Enviada em</p>
+                  <p className="text-pitch-200">{formatIso(String(match.notificationSentAt))}</p>
+                </div>
               )}
             </div>
-            {notifyMsg && <p className="text-sm text-green-400">{notifyMsg}</p>}
-            {notifyErr && <p className="text-sm text-red-400">{notifyErr}</p>}
-            <Button
-              variant="secondary"
-              onClick={handleNotify}
-              disabled={notifying}
-            >
-              {notifying ? "A enviar…" : "Enviar lembrete agora"}
-            </Button>
-            <p className="text-xs text-pitch-500">
-              Envia notificação push para todos com o link /jogos/{matchId}
-            </p>
+
+            {notifyMsg && (
+              <div className="rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+                {notifyMsg}
+              </div>
+            )}
+            {notifyErr && (
+              <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+                {notifyErr}
+              </div>
+            )}
+
+            <div>
+              <Button variant="secondary" onClick={handleNotify} disabled={notifying}>
+                {notifying ? "A enviar…" : "Enviar lembrete agora"}
+              </Button>
+              <p className="mt-2 text-xs text-pitch-500">
+                Envia notificação push para todos com o link /jogos/{matchId}
+              </p>
+            </div>
           </div>
         </Card>
       </main>

@@ -216,3 +216,10 @@ export async function getKnockoutMatchPrediction(
   const snap = await getDoc(doc(db, "matchPredictions", `${uid}_${matchId}`));
   return snap.exists() ? (snap.data() as KnockoutMatchPrediction) : null;
 }
+
+export async function listUserKnockoutPredictions(uid: string): Promise<KnockoutMatchPrediction[]> {
+  const snap = await getDocs(
+    query(collection(db, "matchPredictions"), where("uid", "==", uid))
+  );
+  return snap.docs.map((d) => d.data() as KnockoutMatchPrediction);
+}

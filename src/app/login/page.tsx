@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -26,10 +27,15 @@ export default function LoginPage() {
       return;
     }
 
+    if (mode === "register" && !phoneNumber.trim()) {
+      setError("O telemóvel é obrigatório.");
+      return;
+    }
+
     setBusy(true);
     try {
       if (mode === "register") {
-        await register(name, email, password);
+        await register(name, email, password, phoneNumber.trim());
         router.push("/ativar");
       } else {
         await login(email, password);
@@ -97,6 +103,22 @@ export default function LoginPage() {
                   placeholder="O teu nome"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {mode === "register" && (
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-pitch-300 uppercase tracking-wide">
+                  Telemóvel
+                </label>
+                <input
+                  className={inputClass}
+                  placeholder="+351 912 345 678"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
                 />
               </div>

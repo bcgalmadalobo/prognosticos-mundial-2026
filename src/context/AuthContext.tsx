@@ -11,7 +11,7 @@ interface AuthContextValue {
   user: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string, phoneNumber: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -55,11 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async login(email, password) {
       await signInWithEmailAndPassword(auth, email, password);
     },
-    async register(name, email, password) {
+    async register(name, email, password, phoneNumber) {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phoneNumber }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro ao registar.");

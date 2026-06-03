@@ -10,13 +10,15 @@ export async function POST(req: NextRequest) {
       name?: string;
       email?: string;
       password?: string;
+      phoneNumber?: string;
     };
 
     const name = body.name?.trim();
     const email = body.email?.trim().toLowerCase();
     const password = body.password;
+    const phoneNumber = body.phoneNumber?.trim();
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phoneNumber) {
       return NextResponse.json({ error: "Todos os campos sao obrigatorios." }, { status: 400 });
     }
 
@@ -43,6 +45,7 @@ export async function POST(req: NextRequest) {
         uid,
         name,
         email,
+        phoneNumber,
         role: "user",
         approved: false,
         status: "pending_access_code",

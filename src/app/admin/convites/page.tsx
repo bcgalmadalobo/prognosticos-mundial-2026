@@ -99,6 +99,9 @@ export default function ConvitesPage() {
                   <div className="md:col-span-1">
                     <p className="font-semibold text-amber-300">{u.name}</p>
                     <p className="truncate text-amber-400/80">{u.email}</p>
+                    {u.phoneNumber && (
+                      <p className="text-amber-300/70">{u.phoneNumber}</p>
+                    )}
                   </div>
                   <div className="flex items-center md:col-span-1">
                     {generatedCodes[u.uid] ? (

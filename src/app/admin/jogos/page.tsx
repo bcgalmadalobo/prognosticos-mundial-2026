@@ -13,11 +13,27 @@ const ROUND_ORDER: KnockoutRound[] = [
   "round_of_32", "round_of_16", "quarter_final", "semi_final", "third_place", "final",
 ];
 
-const statusBadge = (s: string) => {
+function statusBadgeCls(s: string) {
   if (s === "finished") return "bg-pitch-600 text-pitch-300";
   if (s === "live") return "bg-green-700/40 text-green-400";
   return "bg-pitch-700 text-pitch-300";
-};
+}
+
+function statusLabel(s: string) {
+  if (s === "finished") return "Terminado";
+  if (s === "live") return "Em jogo";
+  return "Agendado";
+}
+
+function NotifDot({ status }: { status?: string | null }) {
+  const cls =
+    status === "sent"    ? "bg-green-400" :
+    status === "failed"  ? "bg-red-400" :
+    status === "sending" ? "bg-yellow-400" :
+    "bg-pitch-600";
+  const title = status === "sent" ? "Notif enviada" : status === "failed" ? "Notif falhou" : status === "sending" ? "A enviar notif" : "Notif pendente";
+  return <span className={`h-2 w-2 rounded-full shrink-0 ${cls}`} title={title} />;
+}
 
 export default function AdminJogosPage() {
   const [matches, setMatches] = useState<KnockoutMatch[]>([]);
@@ -119,7 +135,7 @@ export default function AdminJogosPage() {
   return (
     <Protected adminOnly>
       <main className="mx-auto max-w-5xl space-y-6 p-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-pitch-50">Jogos Eliminatórios</h1>
             <p className="mt-1 text-sm text-pitch-300">M73–M104 · {matches.length} jogos carregados</p>
@@ -140,7 +156,7 @@ export default function AdminJogosPage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3">
           <div>
             <p className="text-sm font-semibold text-pitch-100">Recalcular pontos eliminatórios</p>
             <p className="text-xs text-pitch-400">Recalcula matchPredictions e leaderboard a partir dos jogos com status "finished".</p>
@@ -199,39 +215,49 @@ export default function AdminJogosPage() {
                     {ROUND_LABELS[round]}
                   </h2>
                   <div className="h-px flex-1 bg-pitch-600" />
+                  <span className="text-xs text-pitch-500">{list.length} jogo{list.length !== 1 ? "s" : ""}</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {list.map((match) => {
                     const teamA = match.teamAName ?? match.slotA;
                     const teamB = match.teamBName ?? match.slotB;
+                    const oddsParts: string[] = [];
+                    if (match.oddsTeamA) oddsParts.push(String(match.oddsTeamA));
+                    if (match.oddsDraw) oddsParts.push(`X ${match.oddsDraw}`);
+                    if (match.oddsTeamB) oddsParts.push(String(match.oddsTeamB));
+                    const oddsStr = oddsParts.length > 0 ? oddsParts.join(" · ") : null;
+
                     return (
                       <Link
                         key={match.id}
                         href={`/admin/jogos/${match.id}`}
-                        className="flex items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3 transition hover:border-neon-500/60 hover:bg-pitch-700/50"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3 transition hover:border-neon-500/60 hover:bg-pitch-700/50"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="shrink-0 text-xs font-mono text-pitch-400">{match.id}</span>
-                          <span className="font-medium text-pitch-50 truncate">
-                            {teamA} <span className="text-pitch-400">vs</span> {teamB}
-                          </span>
+                          <span className="shrink-0 text-xs font-mono text-pitch-500">{match.id}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium text-pitch-50 truncate">
+                              {teamA} <span className="text-pitch-500">vs</span> {teamB}
+                            </p>
+                            {oddsStr && (
+                              <p className="mt-0.5 text-[11px] font-mono text-pitch-500">{oddsStr}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          <NotifDot status={match.notificationStatus} />
                           <span className="hidden sm:inline text-xs text-pitch-400">
                             {match.displayTimePortugal}
                           </span>
-                          <span className="hidden sm:inline text-xs text-pitch-400">
-                            {match.venue}
-                          </span>
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadge(match.status)}`}>
-                            {match.status}
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeCls(match.status)}`}>
+                            {statusLabel(match.status)}
                           </span>
                           {match.bettingOpen && (
-                            <span className="rounded-full bg-neon-500/20 px-2 py-0.5 text-xs font-medium text-neon-400">
-                              aberta
+                            <span className="hidden sm:inline rounded-full bg-neon-500/20 px-2 py-0.5 text-xs font-medium text-neon-400">
+                              Aberta
                             </span>
                           )}
-                          <span className="text-pitch-400 text-sm">→</span>
+                          <span className="text-pitch-500 text-xs ml-1">→</span>
                         </div>
                       </Link>
                     );
