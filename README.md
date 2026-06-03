@@ -251,13 +251,66 @@ The `FIREBASE_ADMIN_PRIVATE_KEY` value must include literal `\n` characters as t
 
 ## 13. Notificações
 
-Notificações automáticas por cron ainda não estão ativas; por agora usar envio manual no admin/OneSignal.
+### Envio manual (sempre disponível)
 
-- **Broadcast manual** para todos os utilizadores: `/admin/notificacoes`
+- **Broadcast** para todos os utilizadores: `/admin/notificacoes`
 - **Lembrete por jogo**: `/admin/jogos/[matchId]` → botão "Enviar lembrete agora"
 - API de lembrete protegida por role `admin`: `/api/knockout-matches/[matchId]/notify`
 
-Os campos `notificationScheduledAt`, `notificationStatus` e `notificationSentAt` estão presentes nos documentos `knockoutMatches` e ficam preparados para uma futura integração de cron automático.
+### Notificações automáticas com cron-job.org
+
+O endpoint `GET /api/cron/knockout-notifications` percorre todos os jogos eliminatórios
+e envia notificações para os que estejam prontos. Não usa Vercel Cron nem índices compostos.
+
+**Filtro aplicado em memória (máx. 32 documentos):**
+
+- `bettingOpen === true`
+- `status === "scheduled"`
+- `notificationStatus !== "sent"`
+- `notificationScheduledAt <= agora`
+- `startsAt > agora`
+
+**Resposta JSON:**
+
+```json
+{ "checked": 32, "eligible": 1, "sent": 1, "skipped": 0, "failed": 0, "errors": [] }
+```
+
+**Variável de ambiente necessária:**
+
+```text
+CRON_SECRET=um-segredo-longo-e-aleatorio
+```
+
+Adicionar ao Vercel em **Project Settings → Environment Variables**.
+
+**Configurar no cron-job.org:**
+
+1. Criar conta gratuita em [cron-job.org](https://cron-job.org).
+2. Criar novo cron job:
+
+| Campo | Valor |
+|---|---|
+| URL | `https://your-app.vercel.app/api/cron/knockout-notifications` |
+| Método | `GET` |
+| Header | `Authorization: Bearer <CRON_SECRET>` |
+| Intervalo | A cada 5 minutos |
+| Fuso horário | UTC |
+
+3. Substituir `<CRON_SECRET>` pelo valor definido no Vercel.
+
+**Testar manualmente:**
+
+```bash
+curl -X GET https://your-app.vercel.app/api/cron/knockout-notifications \
+  -H "Authorization: Bearer <CRON_SECRET>"
+```
+
+**Configurar `notificationScheduledAt` num jogo:**
+
+Em `/admin/jogos/[matchId]`, definir o campo `notificationScheduledAt` com a data/hora
+em que a notificação deve ser enviada (geralmente 30 minutos antes do início do jogo).
+O cron apanha o jogo na próxima execução após essa hora.
 
 ## Design — Fase 5A (Design System Global)
 
