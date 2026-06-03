@@ -61,6 +61,16 @@ export default function AdminJogosPage() {
     dryRun: boolean;
   } | null>(null);
   const [importOddsErr, setImportOddsErr] = useState("");
+  const [importResultsBusy, setImportResultsBusy] = useState(false);
+  const [importResultsResult, setImportResultsResult] = useState<{
+    checked: number;
+    updated: number;
+    skipped: number;
+    failed: number;
+    warnings: string[];
+    dryRun: boolean;
+  } | null>(null);
+  const [importResultsErr, setImportResultsErr] = useState("");
 
   async function fetchMatches() {
     try {
@@ -153,6 +163,45 @@ export default function AdminJogosPage() {
       setImportOddsErr(e instanceof Error ? e.message : "Erro desconhecido.");
     } finally {
       setImportOddsBusy(false);
+    }
+  }
+
+  async function handleImportResults(dryRun: boolean) {
+    setImportResultsBusy(true);
+    setImportResultsResult(null);
+    setImportResultsErr("");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setImportResultsErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch("/api/admin/import-results", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
+      });
+      const data = await res.json() as {
+        ok?: boolean;
+        checked?: number;
+        updated?: number;
+        skipped?: number;
+        failed?: number;
+        warnings?: string[];
+        dryRun?: boolean;
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Erro ao importar resultados.");
+      setImportResultsResult({
+        checked: data.checked ?? 0,
+        updated: data.updated ?? 0,
+        skipped: data.skipped ?? 0,
+        failed: data.failed ?? 0,
+        warnings: data.warnings ?? [],
+        dryRun: data.dryRun ?? dryRun,
+      });
+      if (!dryRun) await fetchMatches();
+    } catch (e) {
+      setImportResultsErr(e instanceof Error ? e.message : "Erro desconhecido.");
+    } finally {
+      setImportResultsBusy(false);
     }
   }
 
@@ -291,6 +340,55 @@ export default function AdminJogosPage() {
         {importOddsErr && (
           <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
             {importOddsErr}
+          </div>
+        )}
+
+        {/* Import results block */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-pitch-100">Importar resultados automáticos</p>
+            <p className="text-xs text-pitch-400">
+              Busca resultados na API-Football para jogos com kick-off passado e sem status "finished".
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => handleImportResults(true)} disabled={importResultsBusy} variant="secondary">
+              {importResultsBusy ? "A verificar…" : "Simular (dry run)"}
+            </Button>
+            <Button onClick={() => handleImportResults(false)} disabled={importResultsBusy} variant="gold">
+              {importResultsBusy ? "A importar…" : "Importar resultados agora"}
+            </Button>
+          </div>
+        </div>
+
+        {importResultsResult && (
+          <div className={`rounded-xl border p-4 text-sm ${importResultsResult.dryRun ? "border-amber-500/30 bg-amber-900/20" : "border-green-500/30 bg-green-900/30"}`}>
+            <p className={`font-semibold mb-2 ${importResultsResult.dryRun ? "text-amber-400" : "text-green-400"}`}>
+              {importResultsResult.dryRun ? "Simulação concluída (sem alterações)" : "Importação de resultados concluída"}
+            </p>
+            <ul className="space-y-1 text-pitch-200">
+              <li>Jogos verificados: <span className="font-mono text-pitch-50">{importResultsResult.checked}</span></li>
+              <li>Resultados atualizados: <span className="font-mono text-pitch-50">{importResultsResult.updated}</span></li>
+              <li>Ignorados (já terminados / ainda não começaram): <span className="font-mono text-pitch-50">{importResultsResult.skipped}</span></li>
+              {importResultsResult.failed > 0 && (
+                <li>Falhas: <span className="font-mono text-red-400">{importResultsResult.failed}</span></li>
+              )}
+            </ul>
+            {importResultsResult.warnings.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-yellow-400 mb-1">Avisos ({importResultsResult.warnings.length})</p>
+                <ul className="space-y-0.5">
+                  {importResultsResult.warnings.map((w, i) => (
+                    <li key={i} className="text-xs text-yellow-300 font-mono">{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {importResultsErr && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            {importResultsErr}
           </div>
         )}
 

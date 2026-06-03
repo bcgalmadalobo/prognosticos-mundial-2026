@@ -130,6 +130,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       };
     }
 
+    if ("externalFixtureId" in body) {
+      patch.externalFixtureId =
+        body.externalFixtureId === "" || body.externalFixtureId == null
+          ? FieldValue.delete()
+          : String(body.externalFixtureId).trim();
+    }
+
     // Auto-tag as manual when admin sets odds + opens betting for the first time
     const hasManualOdds =
       (patch.oddsTeamA !== undefined && Number(patch.oddsTeamA) > 0) ||

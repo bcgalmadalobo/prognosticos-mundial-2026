@@ -8,7 +8,7 @@ import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
 import { ROUND_LABELS, bettingDeadline } from "@/lib/matchPredictionValidation";
-import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90, OddsImportStatus } from "@/types";
+import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90, OddsImportStatus, ResultsImportStatus } from "@/types";
 
 const inputCls =
   "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 placeholder:text-pitch-400 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
@@ -40,6 +40,19 @@ function NotifStatusBadge({ status }: { status?: string | null }) {
     return <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Falhou</span>;
   }
   return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">{status}</span>;
+}
+
+function ResultsSyncBadge({ status }: { status?: ResultsImportStatus }) {
+  if (status === "synced") {
+    return <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">Sincronizado</span>;
+  }
+  if (status === "failed") {
+    return <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Falhou</span>;
+  }
+  if (status === "manual") {
+    return <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-400">Manual</span>;
+  }
+  return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">Pendente</span>;
 }
 
 function OddsImportBadge({ status, locked }: { status?: OddsImportStatus; locked?: boolean }) {
@@ -79,6 +92,9 @@ export default function AdminMatchEditPage({ params }: PageProps) {
   const [notifyErr, setNotifyErr] = useState("");
   const [notifying, setNotifying] = useState(false);
   const [deadlinePreview, setDeadlinePreview] = useState<string | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
+  const [syncErr, setSyncErr] = useState("");
 
   async function fetchMatch() {
     try {
@@ -116,6 +132,35 @@ export default function AdminMatchEditPage({ params }: PageProps) {
 
   function handleStartsAtChange(e: ChangeEvent<HTMLInputElement>) {
     setDeadlinePreview(computeDeadlinePreview(e.target.value.trim()));
+  }
+
+  async function handleSyncNow() {
+    setSyncBusy(true);
+    setSyncMsg("");
+    setSyncErr("");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setSyncErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch("/api/admin/import-results", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun: false }),
+      });
+      const data = await res.json() as {
+        ok?: boolean;
+        updated?: number;
+        warnings?: string[];
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Erro ao sincronizar.");
+      setSyncMsg(`Concluído: ${data.updated ?? 0} jogo(s) atualizado(s).`);
+      const refreshed = await fetchMatch();
+      if (refreshed) setMatch(refreshed);
+    } catch (e) {
+      setSyncErr(e instanceof Error ? e.message : "Erro desconhecido.");
+    } finally {
+      setSyncBusy(false);
+    }
   }
 
   async function handleSave(e: FormEvent<HTMLFormElement>) {
@@ -160,6 +205,9 @@ export default function AdminMatchEditPage({ params }: PageProps) {
     if (sA !== null && sA !== "" && sB !== null && sB !== "") {
       updates.resultFinal = { scoreTeamA: Number(sA), scoreTeamB: Number(sB) };
     }
+
+    const extId = String(f.get("externalFixtureId") ?? "").trim();
+    updates.externalFixtureId = extId || "";
 
     try {
       const token = await auth.currentUser?.getIdToken();
@@ -360,6 +408,17 @@ export default function AdminMatchEditPage({ params }: PageProps) {
           {/* Resultado */}
           <Card title="Resultado (preencher após o jogo)">
             <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-xs font-semibold text-pitch-300">
+                  API-Football Fixture ID <span className="font-normal text-pitch-500">(opcional — melhora o mapeamento automático)</span>
+                </label>
+                <input
+                  name="externalFixtureId"
+                  className={inputCls}
+                  defaultValue={match.externalFixtureId ?? ""}
+                  placeholder="ex: 1234567"
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-pitch-300">Resultado 90 min</label>
                 <select name="result90" className={selectCls} defaultValue={match.result90 ?? ""}>
@@ -437,6 +496,60 @@ export default function AdminMatchEditPage({ params }: PageProps) {
                 </p>
               </div>
             )}
+          </div>
+        </Card>
+
+        {/* Results sync status */}
+        <Card title="Sincronização de resultados (API-Football)">
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 text-sm">
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Estado</p>
+                <ResultsSyncBadge status={match.externalSyncStatus} />
+              </div>
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Fonte</p>
+                <p className="text-pitch-200">{match.externalProvider ?? "—"}</p>
+              </div>
+              {match.externalFixtureId && (
+                <div>
+                  <p className="text-xs text-pitch-500 mb-1">Fixture ID</p>
+                  <p className="font-mono text-xs text-pitch-400">{match.externalFixtureId}</p>
+                </div>
+              )}
+              {match.externalLastSyncAt && (
+                <div>
+                  <p className="text-xs text-pitch-500 mb-1">Última sync</p>
+                  <p className="text-pitch-200">{formatIso(String(match.externalLastSyncAt))}</p>
+                </div>
+              )}
+              {match.externalSyncError && (
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-pitch-500 mb-1">Aviso</p>
+                  <p className="text-xs text-yellow-400 font-mono">{match.externalSyncError}</p>
+                </div>
+              )}
+            </div>
+
+            {syncMsg && (
+              <div className="rounded-xl border border-green-500/30 bg-green-900/30 p-3 text-sm text-green-400">
+                {syncMsg}
+              </div>
+            )}
+            {syncErr && (
+              <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+                {syncErr}
+              </div>
+            )}
+
+            <div>
+              <Button variant="secondary" onClick={handleSyncNow} disabled={syncBusy}>
+                {syncBusy ? "A sincronizar…" : "Sincronizar resultados agora"}
+              </Button>
+              <p className="mt-2 text-xs text-pitch-500">
+                Importa resultados da API-Football para todos os jogos com kick-off passado.
+              </p>
+            </div>
           </div>
         </Card>
 

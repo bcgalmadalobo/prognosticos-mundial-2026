@@ -414,6 +414,89 @@ Em `/admin/jogos/[matchId]`, definir o campo `notificationScheduledAt` com a dat
 em que a notificação deve ser enviada (geralmente 30 minutos antes do início do jogo).
 O cron apanha o jogo na próxima execução após essa hora.
 
+## 14. Resultados automáticos (API-Football)
+
+A app pode importar resultados automaticamente a partir de [API-Football / API-Sports](https://www.api-football.com) para jogos eliminatórios com kick-off passado.
+
+### Variável de ambiente
+
+```text
+API_FOOTBALL_KEY=<chave da API-Football>
+```
+
+Adicionar ao `.env.local` e ao Vercel em **Project Settings → Environment Variables**.  
+**Se a variável não estiver definida, a app continua a funcionar normalmente** — o admin pode sempre inserir resultados manualmente em `/admin/jogos/[matchId]`.
+
+### Como funciona
+
+1. O cron ou o botão admin chama `GET https://v3.football.api-sports.io/fixtures?league=1&season=2026`.
+2. Para cada jogo eliminatório que ainda não está "finished" e cujo kick-off já passou:
+   - **Método primário** (mais seguro): se `externalFixtureId` estiver preenchido no documento, faz lookup direto por ID — sem ambiguidade.
+   - **Método secundário** (fuzzy): normaliza os nomes das equipas e procura na resposta da API com janela temporal de ±3h. Exige exatamente **1** fixture correspondente; se forem 0 ou mais de 1, o jogo é ignorado e um aviso é devolvido.
+3. Só atualiza jogos com status `FT`, `AET` ou `PEN`.
+4. Campos atualizados: `status="finished"`, `result90`, `resultFinal`, `externalProvider`, `externalFixtureId`, `externalLastSyncAt`, `externalSyncStatus`.
+5. `winnerTeamId` só é escrito quando o nome da equipa vencedora resolve sem ambiguidade para um ID interno conhecido. Caso contrário, o campo fica por preencher e um aviso é devolvido para o admin corrigir manualmente.
+6. **Nunca toca em**: odds, apostas dos utilizadores, pontuação, notificações, aposta inicial, convites.
+
+### Endpoint admin (manual / dry run)
+
+```
+POST /api/admin/import-results
+Authorization: Bearer <Firebase ID token de admin>
+Content-Type: application/json
+
+{ "dryRun": false }
+```
+
+Com `"dryRun": true`, retorna o que seria atualizado sem escrever no Firestore.
+
+**Resposta:**
+```json
+{
+  "ok": true,
+  "checked": 32,
+  "updated": 2,
+  "skipped": 30,
+  "failed": 0,
+  "warnings": [],
+  "dryRun": false,
+  "results": [...]
+}
+```
+
+### Endpoint cron
+
+```
+GET /api/cron/import-results
+Authorization: Bearer <CRON_SECRET>
+```
+
+Mesma forma de resposta. Configurar no cron-job.org com intervalo de 10–30 minutos durante o torneio.
+
+| Campo | Valor |
+|---|---|
+| URL | `https://your-app.vercel.app/api/cron/import-results` |
+| Método | `GET` |
+| Header | `Authorization: Bearer <CRON_SECRET>` |
+| Intervalo | A cada 15 minutos |
+| Fuso horário | UTC |
+
+### Fallback manual
+
+O admin pode sempre inserir ou corrigir resultados manualmente em `/admin/jogos/[matchId]`:
+- `result90`, `resultFinal`, `status`, `winnerTeamId` — editáveis em qualquer momento.
+- `externalFixtureId` — preencher para melhorar o mapeamento automático futuro.
+
+O botão "Importar resultados agora" em `/admin/jogos` também suporta simulação (dry run).
+
+### Testar sem jogos reais
+
+Todos os helpers puros em `src/lib/importResults.ts` são testados com fixtures mock estáticas em `src/test/importResults.test.ts` — sem chamadas de rede nem Firestore. Cobertos: normalização de nomes, resolução de IDs, matching por ID e por nome+tempo, ambiguidade, resultados FT/AET/PEN, status não terminados, avisos de mapeamento.
+
+```bash
+npm test
+```
+
 ## Design — Fase 5A (Design System Global)
 
 Redesign visual global implementado como fundação para as fases seguintes.

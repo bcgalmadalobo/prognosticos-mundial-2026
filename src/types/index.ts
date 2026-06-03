@@ -282,6 +282,7 @@ export interface KnockoutMatchSeed {
 }
 
 export type OddsImportStatus = "pending" | "imported" | "failed" | "manual";
+export type ResultsImportStatus = "pending" | "synced" | "failed" | "manual";
 
 export interface KnockoutMatch extends KnockoutMatchSeed {
   teamA: string | null;
@@ -312,6 +313,11 @@ export interface KnockoutMatch extends KnockoutMatchSeed {
   notificationSentAt?: string | null;
   notificationStatus?: KnockoutNotificationStatus;
   notificationError?: string;
+  externalProvider?: "api-football";
+  externalFixtureId?: string;
+  externalLastSyncAt?: string | null;
+  externalSyncStatus?: ResultsImportStatus;
+  externalSyncError?: string;
 }
 
 export interface KnockoutMatchPrediction {
