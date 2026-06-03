@@ -8,7 +8,7 @@ import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
 import { ROUND_LABELS, bettingDeadline } from "@/lib/matchPredictionValidation";
-import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90 } from "@/types";
+import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90, OddsImportStatus } from "@/types";
 
 const inputCls =
   "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 placeholder:text-pitch-400 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
@@ -38,6 +38,22 @@ function NotifStatusBadge({ status }: { status?: string | null }) {
   }
   if (status === "failed") {
     return <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Falhou</span>;
+  }
+  return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">{status}</span>;
+}
+
+function OddsImportBadge({ status, locked }: { status?: OddsImportStatus; locked?: boolean }) {
+  if (locked && status === "imported") {
+    return <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">Importadas (bloqueadas)</span>;
+  }
+  if (locked && status === "manual") {
+    return <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-400">Manuais (bloqueadas)</span>;
+  }
+  if (status === "failed") {
+    return <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">Falhou — inserir manualmente</span>;
+  }
+  if (!status || status === "pending") {
+    return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">Pendente</span>;
   }
   return <span className="rounded-full bg-pitch-700 px-2 py-0.5 text-xs text-pitch-400">{status}</span>;
 }
@@ -302,21 +318,43 @@ export default function AdminMatchEditPage({ params }: PageProps) {
           </Card>
 
           {/* Odds */}
-          <Card title="Odds manuais (opcional)">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotALabel}</label>
-                <input name="oddsTeamA" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamA ?? ""} placeholder="ex: 2.10" />
+          <Card title={match.oddsLocked ? "Odds (bloqueadas)" : "Odds manuais (opcional)"}>
+            {match.oddsLocked ? (
+              <div className="space-y-2">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <p className="text-xs text-pitch-500 mb-1">{slotALabel}</p>
+                    <p className="font-mono text-lg font-semibold text-pitch-50">{match.oddsTeamA ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-pitch-500 mb-1">Empate</p>
+                    <p className="font-mono text-lg font-semibold text-pitch-50">{match.oddsDraw ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-pitch-500 mb-1">{slotBLabel}</p>
+                    <p className="font-mono text-lg font-semibold text-pitch-50">{match.oddsTeamB ?? "—"}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-amber-400">
+                  🔒 Odds bloqueadas — não podem ser alteradas pelo formulário.
+                </p>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">Empate</label>
-                <input name="oddsDraw" type="number" step="0.01" className={inputCls} defaultValue={match.oddsDraw ?? ""} placeholder="ex: 3.20" />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotALabel}</label>
+                  <input name="oddsTeamA" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamA ?? ""} placeholder="ex: 2.10" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">Empate</label>
+                  <input name="oddsDraw" type="number" step="0.01" className={inputCls} defaultValue={match.oddsDraw ?? ""} placeholder="ex: 3.20" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotBLabel}</label>
+                  <input name="oddsTeamB" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamB ?? ""} placeholder="ex: 3.50" />
+                </div>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-pitch-300">{slotBLabel}</label>
-                <input name="oddsTeamB" type="number" step="0.01" className={inputCls} defaultValue={match.oddsTeamB ?? ""} placeholder="ex: 3.50" />
-              </div>
-            </div>
+            )}
           </Card>
 
           {/* Resultado */}
@@ -354,6 +392,53 @@ export default function AdminMatchEditPage({ params }: PageProps) {
             <Button type="submit">Guardar alterações</Button>
           </div>
         </form>
+
+        {/* Odds import status */}
+        <Card title="Estado da importação de odds">
+          <div className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div>
+              <p className="text-xs text-pitch-500 mb-1">Estado</p>
+              <OddsImportBadge status={match.oddsImportStatus} locked={match.oddsLocked} />
+            </div>
+            <div>
+              <p className="text-xs text-pitch-500 mb-1">Fonte</p>
+              <p className="text-pitch-200">{match.oddsProvider ?? "—"}</p>
+            </div>
+            {match.oddsSourceBookmaker && (
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Bookmaker</p>
+                <p className="text-pitch-200">{match.oddsSourceBookmaker}</p>
+              </div>
+            )}
+            {match.oddsImportedAt && (
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Importadas em</p>
+                <p className="text-pitch-200">{formatIso(String(match.oddsImportedAt))}</p>
+              </div>
+            )}
+            {match.bettingOpenedAt && (
+              <div>
+                <p className="text-xs text-pitch-500 mb-1">Apostas abertas em</p>
+                <p className="text-pitch-200">{formatIso(String(match.bettingOpenedAt))}</p>
+              </div>
+            )}
+            {match.oddsExternalEventId && (
+              <div className="sm:col-span-2">
+                <p className="text-xs text-pitch-500 mb-1">Event ID (Odds API)</p>
+                <p className="text-xs font-mono text-pitch-400">{match.oddsExternalEventId}</p>
+              </div>
+            )}
+            {match.oddsImportError && (
+              <div className="sm:col-span-2">
+                <p className="text-xs text-pitch-500 mb-1">Erro</p>
+                <p className="text-xs text-red-400 font-mono">{match.oddsImportError}</p>
+                <p className="mt-1 text-xs text-amber-400">
+                  Insere as odds manualmente na secção acima e abre as apostas.
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
 
         {/* Notificações */}
         <Card title="Notificações">

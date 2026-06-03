@@ -281,17 +281,27 @@ export interface KnockoutMatchSeed {
   country: string;
 }
 
+export type OddsImportStatus = "pending" | "imported" | "failed" | "manual";
+
 export interface KnockoutMatch extends KnockoutMatchSeed {
   teamA: string | null;
   teamB: string | null;
   teamAName?: string;
   teamBName?: string;
   bettingOpen: boolean;
+  bettingOpenedAt?: string | null;
   status: KnockoutMatchStatus;
   timeTBD: boolean;
   oddsTeamA?: number;
   oddsDraw?: number;
   oddsTeamB?: number;
+  oddsLocked?: boolean;
+  oddsImportedAt?: string | null;
+  oddsProvider?: string;
+  oddsSourceBookmaker?: string;
+  oddsExternalEventId?: string;
+  oddsImportStatus?: OddsImportStatus;
+  oddsImportError?: string;
   result90?: KnockoutResult90;
   resultFinal?: {
     scoreTeamA: number;

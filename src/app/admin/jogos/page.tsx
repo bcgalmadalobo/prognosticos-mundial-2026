@@ -50,6 +50,17 @@ export default function AdminJogosPage() {
     warnings: string[];
   } | null>(null);
   const [recalcErr, setRecalcErr] = useState("");
+  const [importOddsBusy, setImportOddsBusy] = useState(false);
+  const [importOddsResult, setImportOddsResult] = useState<{
+    checked: number;
+    eligible: number;
+    imported: number;
+    skipped: number;
+    failed: number;
+    warnings: string[];
+    dryRun: boolean;
+  } | null>(null);
+  const [importOddsErr, setImportOddsErr] = useState("");
 
   async function fetchMatches() {
     try {
@@ -101,6 +112,47 @@ export default function AdminJogosPage() {
       setRecalcErr(e instanceof Error ? e.message : "Erro desconhecido.");
     } finally {
       setRecalcBusy(false);
+    }
+  }
+
+  async function handleImportOdds(dryRun: boolean) {
+    setImportOddsBusy(true);
+    setImportOddsResult(null);
+    setImportOddsErr("");
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) { setImportOddsErr("Sessão expirada. Recarrega a página."); return; }
+      const res = await fetch("/api/admin/import-odds", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
+      });
+      const data = await res.json() as {
+        ok?: boolean;
+        checked?: number;
+        eligible?: number;
+        imported?: number;
+        skipped?: number;
+        failed?: number;
+        warnings?: string[];
+        dryRun?: boolean;
+        error?: string;
+      };
+      if (!res.ok) throw new Error(data.error ?? "Erro ao importar odds.");
+      setImportOddsResult({
+        checked: data.checked ?? 0,
+        eligible: data.eligible ?? 0,
+        imported: data.imported ?? 0,
+        skipped: data.skipped ?? 0,
+        failed: data.failed ?? 0,
+        warnings: data.warnings ?? [],
+        dryRun: data.dryRun ?? dryRun,
+      });
+      if (!dryRun) await fetchMatches();
+    } catch (e) {
+      setImportOddsErr(e instanceof Error ? e.message : "Erro desconhecido.");
+    } finally {
+      setImportOddsBusy(false);
     }
   }
 
@@ -189,6 +241,56 @@ export default function AdminJogosPage() {
         {recalcErr && (
           <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
             {recalcErr}
+          </div>
+        )}
+
+        {/* Import odds block */}
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-pitch-500 bg-pitch-800 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-pitch-100">Importar odds automáticas</p>
+            <p className="text-xs text-pitch-400">
+              Busca odds na The Odds API para jogos agendados nas próximas 24h sem odds bloqueadas.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => handleImportOdds(true)} disabled={importOddsBusy} variant="secondary">
+              {importOddsBusy ? "A verificar…" : "Simular (dry run)"}
+            </Button>
+            <Button onClick={() => handleImportOdds(false)} disabled={importOddsBusy} variant="gold">
+              {importOddsBusy ? "A importar…" : "Importar odds agora"}
+            </Button>
+          </div>
+        </div>
+
+        {importOddsResult && (
+          <div className={`rounded-xl border p-4 text-sm ${importOddsResult.dryRun ? "border-amber-500/30 bg-amber-900/20" : "border-green-500/30 bg-green-900/30"}`}>
+            <p className={`font-semibold mb-2 ${importOddsResult.dryRun ? "text-amber-400" : "text-green-400"}`}>
+              {importOddsResult.dryRun ? "Simulação concluída (sem alterações)" : "Importação concluída"}
+            </p>
+            <ul className="space-y-1 text-pitch-200">
+              <li>Jogos verificados: <span className="font-mono text-pitch-50">{importOddsResult.checked}</span></li>
+              <li>Elegíveis (próximas 24h): <span className="font-mono text-pitch-50">{importOddsResult.eligible}</span></li>
+              <li>Odds importadas: <span className="font-mono text-pitch-50">{importOddsResult.imported}</span></li>
+              <li>Ignorados (fora da janela / já bloqueados): <span className="font-mono text-pitch-50">{importOddsResult.skipped}</span></li>
+              {importOddsResult.failed > 0 && (
+                <li>Falhas: <span className="font-mono text-red-400">{importOddsResult.failed}</span></li>
+              )}
+            </ul>
+            {importOddsResult.warnings.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-yellow-400 mb-1">Avisos ({importOddsResult.warnings.length})</p>
+                <ul className="space-y-0.5">
+                  {importOddsResult.warnings.map((w, i) => (
+                    <li key={i} className="text-xs text-yellow-300 font-mono">{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+        {importOddsErr && (
+          <div className="rounded-xl border border-red-500/30 bg-red-900/30 p-3 text-sm text-red-400">
+            {importOddsErr}
           </div>
         )}
 

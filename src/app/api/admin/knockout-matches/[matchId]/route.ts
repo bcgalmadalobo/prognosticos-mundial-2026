@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 import { notificationTime } from "@/lib/matchPredictionValidation";
-import type { KnockoutMatchStatus, KnockoutResult90 } from "@/types";
+import type { KnockoutMatch, KnockoutMatchStatus, KnockoutResult90 } from "@/types";
 
 interface Params { params: Promise<{ matchId: string }> }
 
@@ -94,9 +95,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       patch.status = body.status;
     }
 
-    if ("oddsTeamA" in body && body.oddsTeamA !== undefined) patch.oddsTeamA = Number(body.oddsTeamA);
-    if ("oddsDraw" in body && body.oddsDraw !== undefined) patch.oddsDraw = Number(body.oddsDraw);
-    if ("oddsTeamB" in body && body.oddsTeamB !== undefined) patch.oddsTeamB = Number(body.oddsTeamB);
+    // Read current doc to enforce oddsLocked rules
+    const existingSnap = await auth.db.collection("knockoutMatches").doc(matchId).get();
+    const existing = existingSnap.exists ? (existingSnap.data() as KnockoutMatch) : null;
+
+    const oddsAreEditable = existing?.oddsLocked !== true;
+
+    if (oddsAreEditable) {
+      if ("oddsTeamA" in body && body.oddsTeamA !== undefined) patch.oddsTeamA = Number(body.oddsTeamA);
+      if ("oddsDraw" in body && body.oddsDraw !== undefined) patch.oddsDraw = Number(body.oddsDraw);
+      if ("oddsTeamB" in body && body.oddsTeamB !== undefined) patch.oddsTeamB = Number(body.oddsTeamB);
+    }
+
     if ("winnerTeamId" in body && body.winnerTeamId !== undefined) patch.winnerTeamId = String(body.winnerTeamId);
 
     if ("startsAt" in body && body.startsAt) {
@@ -118,6 +128,19 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         scoreTeamA: Number(rf.scoreTeamA),
         scoreTeamB: Number(rf.scoreTeamB),
       };
+    }
+
+    // Auto-tag as manual when admin sets odds + opens betting for the first time
+    const hasManualOdds =
+      (patch.oddsTeamA !== undefined && Number(patch.oddsTeamA) > 0) ||
+      (patch.oddsDraw !== undefined && Number(patch.oddsDraw) > 0) ||
+      (patch.oddsTeamB !== undefined && Number(patch.oddsTeamB) > 0);
+
+    if (hasManualOdds && patch.bettingOpen === true && oddsAreEditable) {
+      patch.oddsProvider = "manual";
+      patch.oddsImportStatus = "manual";
+      patch.oddsLocked = true;
+      patch.bettingOpenedAt = FieldValue.serverTimestamp();
     }
 
     if (Object.keys(patch).length === 0) {

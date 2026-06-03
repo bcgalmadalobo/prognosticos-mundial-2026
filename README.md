@@ -221,7 +221,109 @@ NEXT_PUBLIC_ONESIGNAL_APP_ID=
 
 Do not put the OneSignal REST API key in frontend code.
 
-## 12. Deploy
+## 12. Odds automáticas (The Odds API)
+
+A app importa odds automaticamente a partir de [The Odds API](https://the-odds-api.com) para jogos
+eliminatórios agendados nas próximas 24 horas.
+
+### Variável de ambiente
+
+```text
+ODDS_API_KEY=<chave da The Odds API>
+```
+
+Adicionar ao `.env.local` e ao Vercel em **Project Settings → Environment Variables**.  
+A chave não deve começar com `NEXT_PUBLIC_` — é usada exclusivamente em rotas de servidor.
+
+### Comportamento
+
+- As odds são importadas **uma única vez** por jogo.
+- Após importação, o campo `oddsLocked: true` impede que qualquer atualização automática ou manual
+  normal sobrescreva as odds.
+- Ao importar, `bettingOpen` é definido como `true` automaticamente.
+- Se a API não tiver odds para um jogo, o campo `oddsImportStatus: "failed"` é gravado e o
+  organizador pode inserir as odds manualmente na página `/admin/jogos/[matchId]`.
+- Ao inserir odds manualmente **e** abrir as apostas no mesmo formulário, as odds ficam igualmente
+  bloqueadas (`oddsProvider: "manual"`, `oddsImportStatus: "manual"`, `oddsLocked: true`).
+
+### Endpoint cron
+
+```
+GET /api/cron/import-odds
+Authorization: Bearer <CRON_SECRET>
+```
+
+**Filtro aplicado em memória (máx. 32 documentos):**
+
+- `status === "scheduled"`
+- `oddsLocked !== true`
+- `bettingOpen !== true`
+- `teamA` e `teamB` definidos
+- `startsAt` entre agora e agora + 25 h
+
+**Resposta JSON:**
+
+```json
+{
+  "ok": true,
+  "checked": 32,
+  "eligible": 2,
+  "imported": 2,
+  "skipped": 30,
+  "failed": 0,
+  "warnings": [],
+  "dryRun": false,
+  "results": [...]
+}
+```
+
+### Endpoint admin (manual)
+
+```
+POST /api/admin/import-odds
+Authorization: Bearer <Firebase ID token de admin>
+Content-Type: application/json
+
+{ "dryRun": false }
+```
+
+Com `"dryRun": true`, a API faz toda a lógica de matching mas **não escreve no Firestore** —
+útil para verificar se os jogos seriam encontrados na API antes de importar a sério.
+
+### Configurar no cron-job.org
+
+| Campo | Valor |
+|---|---|
+| URL | `https://your-app.vercel.app/api/cron/import-odds` |
+| Método | `GET` |
+| Header | `Authorization: Bearer <CRON_SECRET>` |
+| Intervalo | A cada 30 ou 60 minutos |
+| Fuso horário | UTC |
+
+### Testar sem afetar dados reais
+
+1. Chamar `POST /api/admin/import-odds` com `{ "dryRun": true }` (botão "Simular" em `/admin/jogos`).
+2. Verificar o JSON de resposta: `results` mostra o que seria importado.
+3. Nenhum documento Firestore é alterado em modo dryRun.
+
+Para um teste real de ponta a ponta: editar temporariamente `startsAt` de um jogo no Firestore para
+`now + 23h`, chamar o endpoint sem dryRun, verificar que `bettingOpen: true` e odds ficaram gravadas,
+e repor o `startsAt` original.
+
+### The Odds API — parâmetros usados
+
+| Parâmetro | Valor |
+|---|---|
+| sport | `soccer_fifa_world_cup` |
+| regions | `eu` |
+| markets | `h2h` |
+| oddsFormat | `decimal` |
+| commenceTimeFrom | agora (ISO 8601) |
+| commenceTimeTo | agora + 25 h (ISO 8601) |
+
+Bookmaker preferido (por ordem): `bet365` → `unibet` → `pinnacle` → `betfair_ex_eu` → `williamhill` → `bwin`.
+
+## 13. Deploy
 
 Push to GitHub and import into Vercel.
 
