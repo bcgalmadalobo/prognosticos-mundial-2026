@@ -50,7 +50,10 @@ export default function PontuacaoPage() {
   useEffect(() => {
     getScoringSettings()
       .then((s) => setSettings(deepClone(s)))
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setError("Não foi possível carregar as definições guardadas. A usar valores padrão.");
+      });
   }, []);
 
   function setInitial(key: keyof ScoringSettings["initial"], raw: string) {
@@ -173,6 +176,7 @@ export default function PontuacaoPage() {
               <tbody className="divide-y divide-pitch-600">
                 {KNOCKOUT_ROUNDS.map(({ key, label }) => {
                   const row = settings.knockout[key];
+                  if (!row) return null;
                   return (
                     <tr key={key} className="transition-colors hover:bg-pitch-700/30">
                       <td className="py-3 pr-4 font-medium text-pitch-100">{label}</td>

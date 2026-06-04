@@ -162,8 +162,19 @@ export async function saveTournamentResults(results: TournamentResults): Promise
 
 export async function getScoringSettings(): Promise<ScoringSettings> {
   const snap = await getDoc(doc(db, "scoringSettings", "main"));
-  if (snap.exists()) return snap.data() as ScoringSettings;
-  return defaultScoring;
+  if (!snap.exists()) return defaultScoring;
+  const raw = snap.data() as Partial<ScoringSettings>;
+  return {
+    initial: { ...defaultScoring.initial, ...(raw.initial ?? {}) },
+    knockout: {
+      round_of_32:   { ...defaultScoring.knockout.round_of_32,   ...(raw.knockout?.round_of_32   ?? {}) },
+      round_of_16:   { ...defaultScoring.knockout.round_of_16,   ...(raw.knockout?.round_of_16   ?? {}) },
+      quarter_final: { ...defaultScoring.knockout.quarter_final, ...(raw.knockout?.quarter_final ?? {}) },
+      semi_final:    { ...defaultScoring.knockout.semi_final,    ...(raw.knockout?.semi_final    ?? {}) },
+      third_place:   { ...defaultScoring.knockout.third_place,   ...(raw.knockout?.third_place   ?? {}) },
+      final:         { ...defaultScoring.knockout.final,         ...(raw.knockout?.final         ?? {}) },
+    },
+  };
 }
 
 export async function saveScoringSettings(settings: ScoringSettings): Promise<void> {

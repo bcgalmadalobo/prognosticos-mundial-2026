@@ -338,6 +338,7 @@ export default function ApostaInicialPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [draftWasCleared, setDraftWasCleared] = useState(false);
   const [firestorePredictionIncompatible, setFirestorePredictionIncompatible] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
 
   // Effect 1: Hydrate form from localStorage on mount (SSR-safe placeholder)
   useEffect(() => {
@@ -398,7 +399,7 @@ export default function ApostaInicialPage() {
         }
       })
       .catch(() => {
-        // Keep localStorage state on Firestore error
+        if (!cancelled && user?.hasSubmittedInitialPrediction) setFetchError(true);
       })
       .finally(() => {
         if (!cancelled) setLoadingPrediction(false);
@@ -610,6 +611,29 @@ export default function ApostaInicialPage() {
     : "A guardar…";
 
   // ── Render ──────────────────────────────────────────────────────────────────
+
+  if (fetchError) {
+    return (
+      <Protected>
+        <main className="mx-auto max-w-2xl px-4 py-6">
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-900/10 p-5 text-center">
+            <p className="text-base font-bold text-amber-400">Erro ao carregar aposta</p>
+            <p className="mt-2 text-sm text-amber-300">
+              Não foi possível carregar a tua aposta. Verifica a ligação à internet e{" "}
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="underline hover:text-amber-200"
+              >
+                recarrega a página
+              </button>
+              .
+            </p>
+          </div>
+        </main>
+      </Protected>
+    );
+  }
 
   if (loadingPrediction) {
     return (
