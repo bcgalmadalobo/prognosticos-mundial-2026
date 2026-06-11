@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
-const DEFAULT_DEADLINE = "2026-06-11T19:15:00.000Z";
+const DEFAULT_DEADLINE = "2026-06-11T19:45:00.000Z";
 
 interface PredictionBody {
   groupPositions?: Record<string, string[]>;

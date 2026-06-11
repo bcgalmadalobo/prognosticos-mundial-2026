@@ -6,7 +6,7 @@ import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { getAppSettings, saveAppSettings } from "@/lib/db";
 
-const DEFAULT_DEADLINE = "2026-06-11T19:15:00.000Z";
+const DEFAULT_DEADLINE = "2026-06-11T19:45:00.000Z";
 
 const fieldCls =
   "w-full rounded-xl border border-pitch-500 bg-pitch-900 px-3 py-2.5 text-sm text-pitch-50 placeholder:text-pitch-400 focus:border-neon-500 focus:outline-none focus:ring-1 focus:ring-neon-500";
@@ -49,7 +49,7 @@ export default function ConfiguracoesPage() {
     setError("");
 
     if (!isValidIsoDate(deadline)) {
-      setError("Deadline inválida. Usa o formato ISO UTC, ex: 2026-06-11T19:15:00.000Z");
+      setError("Deadline inválida. Usa o formato ISO UTC, ex: 2026-06-11T19:45:00.000Z");
       return;
     }
 
@@ -137,15 +137,15 @@ export default function ConfiguracoesPage() {
                   type="text"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  placeholder="2026-06-11T19:15:00.000Z"
+                  placeholder="2026-06-11T19:45:00.000Z"
                   className={`${fieldCls} font-mono`}
                 />
                 <p className="text-xs text-pitch-400">
                   Formato ISO UTC. Portugal continental (verão, UTC+1):{" "}
                   <code className="rounded bg-pitch-700 px-1 text-pitch-200">
-                    2026-06-11T19:15:00.000Z
+                    2026-06-11T19:45:00.000Z
                   </code>{" "}
-                  corresponde a 11/06/2026 às 20:15.
+                  corresponde a 11/06/2026 às 20:45.
                 </p>
                 {deadline && isValidIsoDate(deadline) && (
                   <p className="text-xs text-neon-400">
