@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import type { InitialPrediction } from "@/types";
 
 const DRAFT_KEY = "initialPredictionDraft.v1";
-const DEFAULT_DEADLINE_UTC = "2026-06-11T18:00:00.000Z";
+const DEFAULT_DEADLINE_UTC = "2026-06-11T19:00:00.000Z";
 
 // ── Compatibility guard ───────────────────────────────────────────────────────
 
@@ -163,7 +163,7 @@ function formatDeadlineDisplay(d: Date): string {
     });
     return `${day} às ${time}`;
   } catch {
-    return "11/06/2026 às 19:00";
+    return "11/06/2026 às 20:00";
   }
 }
 
@@ -338,6 +338,7 @@ export default function ApostaInicialPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [draftWasCleared, setDraftWasCleared] = useState(false);
   const [firestorePredictionIncompatible, setFirestorePredictionIncompatible] = useState(false);
+  const [bracketChoicesClearedCount, setBracketChoicesClearedCount] = useState(0);
   const [fetchError, setFetchError] = useState(false);
 
   // Effect 1: Hydrate form from localStorage on mount (SSR-safe placeholder)
@@ -381,12 +382,30 @@ export default function ApostaInicialPage() {
             // pageMode stays "editing" so the user can resubmit with current teams
           } else {
             // Populate form state from Firestore prediction (overrides localStorage draft)
-            setGroupOrders(pred.groupPositions ?? structuredClone(GROUPS));
-            setThirdPlaceRanking(
-              pred.thirdPlaceRanking ??
-                deriveThirds(pred.groupPositions ?? structuredClone(GROUPS)),
-            );
-            setBracketChoices(pred.bracketChoices ?? {});
+            const loadedGroupOrders = pred.groupPositions ?? structuredClone(GROUPS);
+            const loadedThirds =
+              pred.thirdPlaceRanking ?? deriveThirds(loadedGroupOrders);
+            const loadedChoices = pred.bracketChoices ?? {};
+
+            // Sanitize bracketChoices against the current bracket template:
+            // any stored choice whose team is no longer in that match is cleared.
+            // This corrects apostas saved before a bracket-structure fix.
+            const tempState = resolveBracket(loadedGroupOrders, loadedThirds, loadedChoices);
+            const sanitizedChoices: Record<string, string | null> = {};
+            let invalidatedCount = 0;
+            for (const [matchId, choice] of Object.entries(loadedChoices)) {
+              if (!choice) continue;
+              if (tempState.matches[matchId]?.winnerId === null) {
+                invalidatedCount++;
+              } else {
+                sanitizedChoices[matchId] = choice;
+              }
+            }
+
+            setGroupOrders(loadedGroupOrders);
+            setThirdPlaceRanking(loadedThirds);
+            setBracketChoices(sanitizedChoices);
+            if (invalidatedCount > 0) setBracketChoicesClearedCount(invalidatedCount);
             setAwards({
               topScorer: pred.topScorer ?? "",
               bestPlayer: pred.bestPlayer ?? "",
@@ -719,6 +738,19 @@ export default function ApostaInicialPage() {
         {firestorePredictionIncompatible && (
           <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
             <strong>A tua aposta anterior contém seleções desatualizadas.</strong> Preenche e submete uma nova aposta com as seleções atuais.
+          </div>
+        )}
+
+        {/* Stale bracket choices cleared by bracket-structure correction */}
+        {bracketChoicesClearedCount > 0 && (
+          <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+            <strong>
+              {bracketChoicesClearedCount}{" "}
+              {bracketChoicesClearedCount === 1
+                ? "escolha do bracket foi limpa"
+                : "escolhas do bracket foram limpas"}
+            </strong>{" "}
+            porque a estrutura do torneio foi corrigida. Confirma os vencedores em falta.
           </div>
         )}
 

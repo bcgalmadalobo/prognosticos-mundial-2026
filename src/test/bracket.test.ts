@@ -311,6 +311,107 @@ describe("resolveBracket end-to-end — /aposta-inicial bracket propagation", ()
   });
 });
 
+// ── Migration from old prediction — stale bracketChoices are cleared ──────────
+//
+// Simulates a user whose aposta was saved before a bracket-structure fix.
+// Old bracketChoices may reference teams that are no longer in a given match
+// under the current BRACKET_TEMPLATE. resolveBracket must clear those choices
+// and still produce the correct teamA/teamB for M89–M96.
+
+describe("migration from old prediction — stale bracketChoices are cleared", () => {
+  it("stale R16 choices are nullified; M89–M96 follow the new bracket template", () => {
+    const groupOrders = makeGroupOrders();
+    const thirdPlaceRanking = makeThirdRanking(groupOrders);
+
+    const p1 = (g: string) => groupOrders[g][0];
+    const p2 = (g: string) => groupOrders[g][1];
+
+    // Valid R32 choices: slotA (teamA) wins every match
+    const r32Choices: Record<string, string | null> = {
+      M73: p2("A"), M74: p1("E"), M75: p1("F"), M76: p1("C"),
+      M77: p1("I"), M78: p2("E"), M79: p1("A"), M80: p1("L"),
+      M81: p1("D"), M82: p1("G"), M83: p2("K"), M84: p1("H"),
+      M85: p1("B"), M86: p1("J"), M87: p1("K"), M88: p2("D"),
+    };
+
+    // Stale R16 choices from an old bracket structure where match pairings differed.
+    // In the new bracket:
+    //   M89 = W77 (=1st(I)) vs W83 (=2nd(K))  → p1("A") is NOT in this match
+    //   M96 = W86 (=1st(J)) vs W85 (=1st(B))  → p2("G") is NOT in this match
+    const staleChoices: Record<string, string | null> = {
+      ...r32Choices,
+      M89: p1("A"),  // stale: p1("A") won M79, not M89 in new bracket
+      M96: p2("G"),  // stale: p2("G") won M88, not M96 in new bracket
+    };
+
+    const state = resolveBracket(groupOrders, thirdPlaceRanking, staleChoices);
+    const m = state.matches;
+
+    // M89 = W77 vs W83 (new official structure)
+    expect(m["M89"].teamA).toBe(p1("I"));   // W77
+    expect(m["M89"].teamB).toBe(p2("K"));   // W83
+    expect(m["M89"].winnerId).toBeNull();    // stale p1("A") invalidated
+
+    // M90 = W74 vs W73 — no stale choice, should have no winner
+    expect(m["M90"].teamA).toBe(p1("E"));   // W74
+    expect(m["M90"].teamB).toBe(p2("A"));   // W73
+    expect(m["M90"].winnerId).toBeNull();
+
+    // M91 = W75 vs W84
+    expect(m["M91"].teamA).toBe(p1("F"));   // W75
+    expect(m["M91"].teamB).toBe(p1("H"));   // W84
+
+    // M92 = W81 vs W82
+    expect(m["M92"].teamA).toBe(p1("D"));   // W81
+    expect(m["M92"].teamB).toBe(p1("G"));   // W82
+
+    // M93 = W79 vs W80
+    expect(m["M93"].teamA).toBe(p1("A"));   // W79
+    expect(m["M93"].teamB).toBe(p1("L"));   // W80
+
+    // M94 = W76 vs W78
+    expect(m["M94"].teamA).toBe(p1("C"));   // W76
+    expect(m["M94"].teamB).toBe(p2("E"));   // W78
+
+    // M95 = W88 vs W87
+    expect(m["M95"].teamA).toBe(p2("D"));   // W88
+    expect(m["M95"].teamB).toBe(p1("K"));   // W87
+
+    // M96 = W86 vs W85 (new official structure)
+    expect(m["M96"].teamA).toBe(p1("J"));   // W86
+    expect(m["M96"].teamB).toBe(p1("B"));   // W85
+    expect(m["M96"].winnerId).toBeNull();    // stale p2("G") invalidated
+  });
+
+  it("deriveRoundTeams ignores stale R16 choices; roundOf16Teams still has 16 entries", () => {
+    const groupOrders = makeGroupOrders();
+    const thirdPlaceRanking = makeThirdRanking(groupOrders);
+
+    const p1 = (g: string) => groupOrders[g][0];
+    const p2 = (g: string) => groupOrders[g][1];
+
+    const staleChoices: Record<string, string | null> = {
+      M73: p2("A"), M74: p1("E"), M75: p1("F"), M76: p1("C"),
+      M77: p1("I"), M78: p2("E"), M79: p1("A"), M80: p1("L"),
+      M81: p1("D"), M82: p1("G"), M83: p2("K"), M84: p1("H"),
+      M85: p1("B"), M86: p1("J"), M87: p1("K"), M88: p2("D"),
+      // Both stale — teams not present in these matches under new bracket
+      M89: p1("A"),
+      M96: p2("G"),
+    };
+
+    const state = resolveBracket(groupOrders, thirdPlaceRanking, staleChoices);
+    const derived = deriveRoundTeams(state);
+
+    // R32 choices were all valid → 16 winners advance
+    expect(derived.roundOf16Teams).toHaveLength(16);
+    expect(new Set(derived.roundOf16Teams).size).toBe(16);
+
+    // No valid R16 choices → no QF teams
+    expect(derived.quarterFinalTeams).toHaveLength(0);
+  });
+});
+
 // ── Error handling ────────────────────────────────────────────────────────────
 
 describe("getThirdPlaceAssignment — error handling", () => {

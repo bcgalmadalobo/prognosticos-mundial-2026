@@ -159,7 +159,7 @@ Esta fase completa o simulador inicial com a seleção de prémios individuais e
 
 - **Prémios individuais**: para além do bracket, o utilizador indica as suas escolhas para melhor marcador, melhor jogador, melhor jovem, melhor guarda-redes, bem como as equipas que alcançam cada ronda (oitavos, quartos, meias, final).
 - **Submissão e edição via `/api/submit-initial-prediction`**: ao confirmar, o browser envia a aposta completa para esta rota de API, que valida e persiste os dados no Firestore. A aposta pode ser submetida e editada quantas vezes o utilizador quiser até à deadline.
-- **Deadline de submissão**: `2026-06-11T18:00:00.000Z` (equivalente a 11/06/2026 às 19:00 em Portugal continental). Pode ser configurada em `appSettings/main.initialPredictionDeadline`; se o documento não existir, é usado o valor por defeito.
+- **Deadline de submissão**: `2026-06-11T19:00:00.000Z` (equivalente a 11/06/2026 às 20:00 em Portugal continental). Pode ser configurada em `appSettings/main.initialPredictionDeadline`; se o documento não existir, é usado o valor por defeito.
 - **Antes da deadline**: a página mostra um banner com a data-limite e um botão "Editar aposta" após cada submissão. O botão de submissão diz "Submeter aposta" na primeira vez e "Guardar alterações" nas seguintes.
 - **Depois da deadline**: a API rejeita qualquer POST com erro 403; a UI mostra a aposta em modo só-leitura sem botão de edição. Se o utilizador nunca submeteu, é mostrada a mensagem "O prazo para submeter a aposta inicial terminou."
 - **`bracketChoices` persistidas**: as escolhas do bracket são guardadas no documento `initialPredictions/{uid}` para que o formulário de edição possa ser restaurado fielmente.
@@ -189,7 +189,7 @@ A página `/admin/configuracoes` permite ao admin editar as definições globais
 | Campo | Descrição |
 |---|---|
 | `competitionName` | Nome da competição mostrado na app |
-| `initialPredictionDeadline` | Data-limite para submissão em ISO UTC (ex: `2026-06-11T18:00:00.000Z`) |
+| `initialPredictionDeadline` | Data-limite para submissão em ISO UTC (ex: `2026-06-11T19:00:00.000Z`) |
 | `welcomeMessage` | Mensagem de boas-vindas opcional no dashboard |
 | `initialPredictionStatus` | `open` — usa a deadline; `closed` — bloqueia imediatamente |
 
@@ -198,7 +198,7 @@ A página `/admin/configuracoes` permite ao admin editar as definições globais
 - `closed`: a API rejeita qualquer POST a `/api/submit-initial-prediction` com 403, independentemente da deadline. A página `/aposta-inicial` mostra "A aposta inicial está temporariamente fechada pelo administrador."
 
 **Defaults (se `appSettings/main` não existir):**
-- `initialPredictionDeadline`: `2026-06-11T18:00:00.000Z` (11/06/2026 às 19:00 em Portugal continental)
+- `initialPredictionDeadline`: `2026-06-11T19:00:00.000Z` (11/06/2026 às 20:00 em Portugal continental)
 - `initialPredictionStatus`: `open`
 
 ## 11. Editor de pontuação
