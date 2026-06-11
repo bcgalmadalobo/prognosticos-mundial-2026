@@ -14,7 +14,7 @@ import { useAuth } from "@/context/AuthContext";
 import type { InitialPrediction } from "@/types";
 
 const DRAFT_KEY = "initialPredictionDraft.v1";
-const DEFAULT_DEADLINE_UTC = "2026-06-11T19:45:00.000Z";
+const DEFAULT_DEADLINE_UTC = "2026-06-11T19:55:00.000Z";
 
 // ── Compatibility guard ───────────────────────────────────────────────────────
 
@@ -163,7 +163,7 @@ function formatDeadlineDisplay(d: Date): string {
     });
     return `${day} às ${time}`;
   } catch {
-    return "11/06/2026 às 20:45";
+    return "11/06/2026 às 20:55";
   }
 }
 
