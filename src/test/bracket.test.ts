@@ -144,14 +144,14 @@ describe("bracket template — Round of 16 sources (M89–M96)", () => {
   const tmplMap = Object.fromEntries(BRACKET_TEMPLATE.map((t) => [t.id, t]));
 
   const r16Pairs: [string, string, string][] = [
-    ["M89", "M77", "M83"],
-    ["M90", "M74", "M73"],
-    ["M91", "M75", "M84"],
-    ["M92", "M81", "M82"],
-    ["M93", "M79", "M80"],
-    ["M94", "M76", "M78"],
-    ["M95", "M88", "M87"],
-    ["M96", "M86", "M85"],
+    ["M89", "M74", "M77"],
+    ["M90", "M73", "M75"],
+    ["M91", "M76", "M78"],
+    ["M92", "M79", "M80"],
+    ["M93", "M83", "M84"],
+    ["M94", "M81", "M82"],
+    ["M95", "M86", "M88"],
+    ["M96", "M85", "M87"],
   ];
 
   for (const [id, srcA, srcB] of r16Pairs) {
@@ -227,37 +227,37 @@ describe("resolveBracket end-to-end — /aposta-inicial bracket propagation", ()
     const state = resolveBracket(groupOrders, thirdPlaceRanking, r32Choices);
     const m = state.matches;
 
-    // Official bracket: M89 = W77 vs W83
-    expect(m["M89"].teamA).toBe(p1("I"));   // W77
-    expect(m["M89"].teamB).toBe(p2("K"));   // W83
+    // Official bracket: M89 = W74 vs W77
+    expect(m["M89"].teamA).toBe(p1("E"));   // W74
+    expect(m["M89"].teamB).toBe(p1("I"));   // W77
 
-    // M90 = W74 vs W73
-    expect(m["M90"].teamA).toBe(p1("E"));   // W74
-    expect(m["M90"].teamB).toBe(p2("A"));   // W73
+    // M90 = W73 vs W75
+    expect(m["M90"].teamA).toBe(p2("A"));   // W73
+    expect(m["M90"].teamB).toBe(p1("F"));   // W75
 
-    // M91 = W75 vs W84
-    expect(m["M91"].teamA).toBe(p1("F"));   // W75
-    expect(m["M91"].teamB).toBe(p1("H"));   // W84
+    // M91 = W76 vs W78
+    expect(m["M91"].teamA).toBe(p1("C"));   // W76
+    expect(m["M91"].teamB).toBe(p2("E"));   // W78
 
-    // M92 = W81 vs W82
-    expect(m["M92"].teamA).toBe(p1("D"));   // W81
-    expect(m["M92"].teamB).toBe(p1("G"));   // W82
+    // M92 = W79 vs W80
+    expect(m["M92"].teamA).toBe(p1("A"));   // W79
+    expect(m["M92"].teamB).toBe(p1("L"));   // W80
 
-    // M93 = W79 vs W80
-    expect(m["M93"].teamA).toBe(p1("A"));   // W79
-    expect(m["M93"].teamB).toBe(p1("L"));   // W80
+    // M93 = W83 vs W84
+    expect(m["M93"].teamA).toBe(p2("K"));   // W83
+    expect(m["M93"].teamB).toBe(p1("H"));   // W84
 
-    // M94 = W76 vs W78
-    expect(m["M94"].teamA).toBe(p1("C"));   // W76
-    expect(m["M94"].teamB).toBe(p2("E"));   // W78
+    // M94 = W81 vs W82
+    expect(m["M94"].teamA).toBe(p1("D"));   // W81
+    expect(m["M94"].teamB).toBe(p1("G"));   // W82
 
-    // M95 = W88 vs W87
-    expect(m["M95"].teamA).toBe(p2("D"));   // W88
-    expect(m["M95"].teamB).toBe(p1("K"));   // W87
+    // M95 = W86 vs W88
+    expect(m["M95"].teamA).toBe(p1("J"));   // W86
+    expect(m["M95"].teamB).toBe(p2("D"));   // W88
 
-    // M96 = W86 vs W85
-    expect(m["M96"].teamA).toBe(p1("J"));   // W86
-    expect(m["M96"].teamB).toBe(p1("B"));   // W85
+    // M96 = W85 vs W87
+    expect(m["M96"].teamA).toBe(p1("B"));   // W85
+    expect(m["M96"].teamB).toBe(p1("K"));   // W87
   });
 
   it("QF matches (M97–M100) have correct teamA/teamB after R32+R16 choices", () => {
@@ -277,14 +277,14 @@ describe("resolveBracket end-to-end — /aposta-inicial bracket propagation", ()
 
     // R16: pick slotA (teamA) as winner of each R16 match
     const r16Choices: Record<string, string> = {
-      M89: p1("I"),  // W77
-      M90: p1("E"),  // W74
-      M91: p1("F"),  // W75
-      M92: p1("D"),  // W81
-      M93: p1("A"),  // W79
-      M94: p1("C"),  // W76
-      M95: p2("D"),  // W88
-      M96: p1("J"),  // W86
+      M89: p1("E"),  // W74 = slotA of new M89
+      M90: p2("A"),  // W73 = slotA of new M90
+      M91: p1("C"),  // W76 = slotA of new M91
+      M92: p1("A"),  // W79 = slotA of new M92
+      M93: p2("K"),  // W83 = slotA of new M93
+      M94: p1("D"),  // W81 = slotA of new M94
+      M95: p1("J"),  // W86 = slotA of new M95
+      M96: p1("B"),  // W85 = slotA of new M96
     };
 
     const state = resolveBracket(groupOrders, thirdPlaceRanking, {
@@ -294,20 +294,20 @@ describe("resolveBracket end-to-end — /aposta-inicial bracket propagation", ()
     const m = state.matches;
 
     // M97 = W89 vs W90
-    expect(m["M97"].teamA).toBe(p1("I"));   // W89
-    expect(m["M97"].teamB).toBe(p1("E"));   // W90
+    expect(m["M97"].teamA).toBe(p1("E"));   // W89 slotA winner = W74 = p1("E")
+    expect(m["M97"].teamB).toBe(p2("A"));   // W90 slotA winner = W73 = p2("A")
 
     // M98 = W93 vs W94
-    expect(m["M98"].teamA).toBe(p1("A"));   // W93
-    expect(m["M98"].teamB).toBe(p1("C"));   // W94
+    expect(m["M98"].teamA).toBe(p2("K"));   // W93 slotA winner = W83 = p2("K")
+    expect(m["M98"].teamB).toBe(p1("D"));   // W94 slotA winner = W81 = p1("D")
 
     // M99 = W91 vs W92
-    expect(m["M99"].teamA).toBe(p1("F"));   // W91
-    expect(m["M99"].teamB).toBe(p1("D"));   // W92
+    expect(m["M99"].teamA).toBe(p1("C"));   // W91 slotA winner = W76 = p1("C")
+    expect(m["M99"].teamB).toBe(p1("A"));   // W92 slotA winner = W79 = p1("A")
 
     // M100 = W95 vs W96
-    expect(m["M100"].teamA).toBe(p2("D"));  // W95
-    expect(m["M100"].teamB).toBe(p1("J"));  // W96
+    expect(m["M100"].teamA).toBe(p1("J"));  // W95 slotA winner = W86 = p1("J")
+    expect(m["M100"].teamB).toBe(p1("B"));  // W96 slotA winner = W85 = p1("B")
   });
 });
 
@@ -336,50 +336,50 @@ describe("migration from old prediction — stale bracketChoices are cleared", (
 
     // Stale R16 choices from an old bracket structure where match pairings differed.
     // In the new bracket:
-    //   M89 = W77 (=1st(I)) vs W83 (=2nd(K))  → p1("A") is NOT in this match
-    //   M96 = W86 (=1st(J)) vs W85 (=1st(B))  → p2("G") is NOT in this match
+    //   M89 = W74 (=1st(E)) vs W77 (=1st(I))  → p1("A") is NOT in this match
+    //   M96 = W85 (=1st(B)) vs W87 (=1st(K))  → p2("G") is NOT in this match
     const staleChoices: Record<string, string | null> = {
       ...r32Choices,
-      M89: p1("A"),  // stale: p1("A") won M79, not M89 in new bracket
-      M96: p2("G"),  // stale: p2("G") won M88, not M96 in new bracket
+      M89: p1("A"),  // stale: p1("A") won M79, not present in new M89 (W74 vs W77)
+      M96: p2("G"),  // stale: p2("G") won M88, not present in new M96 (W85 vs W87)
     };
 
     const state = resolveBracket(groupOrders, thirdPlaceRanking, staleChoices);
     const m = state.matches;
 
-    // M89 = W77 vs W83 (new official structure)
-    expect(m["M89"].teamA).toBe(p1("I"));   // W77
-    expect(m["M89"].teamB).toBe(p2("K"));   // W83
+    // M89 = W74 vs W77 (new official structure)
+    expect(m["M89"].teamA).toBe(p1("E"));   // W74
+    expect(m["M89"].teamB).toBe(p1("I"));   // W77
     expect(m["M89"].winnerId).toBeNull();    // stale p1("A") invalidated
 
-    // M90 = W74 vs W73 — no stale choice, should have no winner
-    expect(m["M90"].teamA).toBe(p1("E"));   // W74
-    expect(m["M90"].teamB).toBe(p2("A"));   // W73
+    // M90 = W73 vs W75 — no stale choice
+    expect(m["M90"].teamA).toBe(p2("A"));   // W73
+    expect(m["M90"].teamB).toBe(p1("F"));   // W75
     expect(m["M90"].winnerId).toBeNull();
 
-    // M91 = W75 vs W84
-    expect(m["M91"].teamA).toBe(p1("F"));   // W75
-    expect(m["M91"].teamB).toBe(p1("H"));   // W84
+    // M91 = W76 vs W78
+    expect(m["M91"].teamA).toBe(p1("C"));   // W76
+    expect(m["M91"].teamB).toBe(p2("E"));   // W78
 
-    // M92 = W81 vs W82
-    expect(m["M92"].teamA).toBe(p1("D"));   // W81
-    expect(m["M92"].teamB).toBe(p1("G"));   // W82
+    // M92 = W79 vs W80
+    expect(m["M92"].teamA).toBe(p1("A"));   // W79
+    expect(m["M92"].teamB).toBe(p1("L"));   // W80
 
-    // M93 = W79 vs W80
-    expect(m["M93"].teamA).toBe(p1("A"));   // W79
-    expect(m["M93"].teamB).toBe(p1("L"));   // W80
+    // M93 = W83 vs W84
+    expect(m["M93"].teamA).toBe(p2("K"));   // W83
+    expect(m["M93"].teamB).toBe(p1("H"));   // W84
 
-    // M94 = W76 vs W78
-    expect(m["M94"].teamA).toBe(p1("C"));   // W76
-    expect(m["M94"].teamB).toBe(p2("E"));   // W78
+    // M94 = W81 vs W82
+    expect(m["M94"].teamA).toBe(p1("D"));   // W81
+    expect(m["M94"].teamB).toBe(p1("G"));   // W82
 
-    // M95 = W88 vs W87
-    expect(m["M95"].teamA).toBe(p2("D"));   // W88
-    expect(m["M95"].teamB).toBe(p1("K"));   // W87
+    // M95 = W86 vs W88
+    expect(m["M95"].teamA).toBe(p1("J"));   // W86
+    expect(m["M95"].teamB).toBe(p2("D"));   // W88
 
-    // M96 = W86 vs W85 (new official structure)
-    expect(m["M96"].teamA).toBe(p1("J"));   // W86
-    expect(m["M96"].teamB).toBe(p1("B"));   // W85
+    // M96 = W85 vs W87 (new official structure)
+    expect(m["M96"].teamA).toBe(p1("B"));   // W85
+    expect(m["M96"].teamB).toBe(p1("K"));   // W87
     expect(m["M96"].winnerId).toBeNull();    // stale p2("G") invalidated
   });
 
