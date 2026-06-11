@@ -4,7 +4,7 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-const NEW_DEADLINE = "2026-06-11T19:00:00.000Z";
+const NEW_DEADLINE = "2026-06-11T19:15:00.000Z";
 
 function getAdminApp() {
   if (getApps().length > 0) return getApps()[0];
