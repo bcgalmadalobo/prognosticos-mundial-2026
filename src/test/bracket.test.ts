@@ -106,6 +106,82 @@ describe("deriveRoundTeams", () => {
   });
 });
 
+// ── Round of 32 pairs ─────────────────────────────────────────────────────────
+
+describe("bracket template — Round of 32 pairs (M73–M88)", () => {
+  const tmplMap = Object.fromEntries(BRACKET_TEMPLATE.map((t) => [t.id, t]));
+
+  const r32Pairs: [string, object, object][] = [
+    ["M73",  { type: "2nd", group: "A" }, { type: "2nd", group: "B" }],
+    ["M74",  { type: "1st", group: "E" }, { type: "3rd", allowedGroups: ["A","B","C","D","F"] }],
+    ["M75",  { type: "1st", group: "F" }, { type: "2nd", group: "C" }],
+    ["M76",  { type: "1st", group: "C" }, { type: "2nd", group: "F" }],
+    ["M77",  { type: "1st", group: "I" }, { type: "3rd", allowedGroups: ["C","D","F","G","H"] }],
+    ["M78",  { type: "2nd", group: "E" }, { type: "2nd", group: "I" }],
+    ["M79",  { type: "1st", group: "A" }, { type: "3rd", allowedGroups: ["C","E","F","H","I"] }],
+    ["M80",  { type: "1st", group: "L" }, { type: "3rd", allowedGroups: ["E","H","I","J","K"] }],
+    ["M81",  { type: "1st", group: "D" }, { type: "3rd", allowedGroups: ["B","E","F","I","J"] }],
+    ["M82",  { type: "1st", group: "G" }, { type: "3rd", allowedGroups: ["A","E","H","I","J"] }],
+    ["M83",  { type: "2nd", group: "K" }, { type: "2nd", group: "L" }],
+    ["M84",  { type: "1st", group: "H" }, { type: "2nd", group: "J" }],
+    ["M85",  { type: "1st", group: "B" }, { type: "3rd", allowedGroups: ["E","F","G","I","J"] }],
+    ["M86",  { type: "1st", group: "J" }, { type: "2nd", group: "H" }],
+    ["M87",  { type: "1st", group: "K" }, { type: "3rd", allowedGroups: ["D","E","I","J","L"] }],
+    ["M88",  { type: "2nd", group: "D" }, { type: "2nd", group: "G" }],
+  ];
+
+  for (const [id, slotA, slotB] of r32Pairs) {
+    it(`${id} has correct pair`, () => {
+      expect(tmplMap[id]?.slotA).toMatchObject(slotA);
+      expect(tmplMap[id]?.slotB).toMatchObject(slotB);
+    });
+  }
+});
+
+// ── Round of 16 sources (M89–M96) ────────────────────────────────────────────
+
+describe("bracket template — Round of 16 sources (M89–M96)", () => {
+  const tmplMap = Object.fromEntries(BRACKET_TEMPLATE.map((t) => [t.id, t]));
+
+  const r16Pairs: [string, string, string][] = [
+    ["M89", "M77", "M83"],
+    ["M90", "M74", "M73"],
+    ["M91", "M75", "M84"],
+    ["M92", "M81", "M82"],
+    ["M93", "M79", "M80"],
+    ["M94", "M76", "M78"],
+    ["M95", "M88", "M87"],
+    ["M96", "M86", "M85"],
+  ];
+
+  for (const [id, srcA, srcB] of r16Pairs) {
+    it(`${id} draws from W${srcA} (slotA) and W${srcB} (slotB)`, () => {
+      expect(tmplMap[id]?.slotA).toMatchObject({ type: "winner", matchId: srcA });
+      expect(tmplMap[id]?.slotB).toMatchObject({ type: "winner", matchId: srcB });
+    });
+  }
+});
+
+// ── Quarter-final sources (M97–M100) ─────────────────────────────────────────
+
+describe("bracket template — Quarter-final sources (M97–M100)", () => {
+  const tmplMap = Object.fromEntries(BRACKET_TEMPLATE.map((t) => [t.id, t]));
+
+  const qfPairs: [string, string, string][] = [
+    ["M97",  "M89", "M90"],
+    ["M98",  "M93", "M94"],
+    ["M99",  "M91", "M92"],
+    ["M100", "M95", "M96"],
+  ];
+
+  for (const [id, srcA, srcB] of qfPairs) {
+    it(`${id} draws from W${srcA} (slotA) and W${srcB} (slotB)`, () => {
+      expect(tmplMap[id]?.slotA).toMatchObject({ type: "winner", matchId: srcA });
+      expect(tmplMap[id]?.slotB).toMatchObject({ type: "winner", matchId: srcB });
+    });
+  }
+});
+
 // ── M103 and M104 structural correctness ─────────────────────────────────────
 
 describe("bracket template — M103 and M104", () => {
@@ -121,6 +197,117 @@ describe("bracket template — M103 and M104", () => {
     expect(m104?.round).toBe("final");
     expect(m104?.slotA).toMatchObject({ type: "winner", matchId: "M101" });
     expect(m104?.slotB).toMatchObject({ type: "winner", matchId: "M102" });
+  });
+});
+
+// ── resolveBracket end-to-end — /aposta-inicial propagation ──────────────────
+//
+// Simulates exactly what /aposta-inicial does at runtime:
+//   bracketState = resolveBracket(groupOrders, thirdPlaceRanking, bracketChoices)
+// Picks slotA (teamA) as winner in every R32 and R16 match, then verifies
+// that teamA/teamB in each downstream match matches the official bracket.
+
+describe("resolveBracket end-to-end — /aposta-inicial bracket propagation", () => {
+  it("R16 matches (M89–M96) have correct teamA/teamB after R32 choices", () => {
+    const groupOrders = makeGroupOrders();
+    const thirdPlaceRanking = makeThirdRanking(groupOrders);
+
+    // Shorthand helpers
+    const p1 = (g: string) => groupOrders[g][0]; // 1st place of group g
+    const p2 = (g: string) => groupOrders[g][1]; // 2nd place of group g
+
+    // Pick slotA (teamA) as winner of each R32 match
+    const r32Choices: Record<string, string> = {
+      M73: p2("A"), M74: p1("E"), M75: p1("F"), M76: p1("C"),
+      M77: p1("I"), M78: p2("E"), M79: p1("A"), M80: p1("L"),
+      M81: p1("D"), M82: p1("G"), M83: p2("K"), M84: p1("H"),
+      M85: p1("B"), M86: p1("J"), M87: p1("K"), M88: p2("D"),
+    };
+
+    const state = resolveBracket(groupOrders, thirdPlaceRanking, r32Choices);
+    const m = state.matches;
+
+    // Official bracket: M89 = W77 vs W83
+    expect(m["M89"].teamA).toBe(p1("I"));   // W77
+    expect(m["M89"].teamB).toBe(p2("K"));   // W83
+
+    // M90 = W74 vs W73
+    expect(m["M90"].teamA).toBe(p1("E"));   // W74
+    expect(m["M90"].teamB).toBe(p2("A"));   // W73
+
+    // M91 = W75 vs W84
+    expect(m["M91"].teamA).toBe(p1("F"));   // W75
+    expect(m["M91"].teamB).toBe(p1("H"));   // W84
+
+    // M92 = W81 vs W82
+    expect(m["M92"].teamA).toBe(p1("D"));   // W81
+    expect(m["M92"].teamB).toBe(p1("G"));   // W82
+
+    // M93 = W79 vs W80
+    expect(m["M93"].teamA).toBe(p1("A"));   // W79
+    expect(m["M93"].teamB).toBe(p1("L"));   // W80
+
+    // M94 = W76 vs W78
+    expect(m["M94"].teamA).toBe(p1("C"));   // W76
+    expect(m["M94"].teamB).toBe(p2("E"));   // W78
+
+    // M95 = W88 vs W87
+    expect(m["M95"].teamA).toBe(p2("D"));   // W88
+    expect(m["M95"].teamB).toBe(p1("K"));   // W87
+
+    // M96 = W86 vs W85
+    expect(m["M96"].teamA).toBe(p1("J"));   // W86
+    expect(m["M96"].teamB).toBe(p1("B"));   // W85
+  });
+
+  it("QF matches (M97–M100) have correct teamA/teamB after R32+R16 choices", () => {
+    const groupOrders = makeGroupOrders();
+    const thirdPlaceRanking = makeThirdRanking(groupOrders);
+
+    const p1 = (g: string) => groupOrders[g][0];
+    const p2 = (g: string) => groupOrders[g][1];
+
+    // R32: pick slotA as winner (same as above)
+    const r32Choices: Record<string, string> = {
+      M73: p2("A"), M74: p1("E"), M75: p1("F"), M76: p1("C"),
+      M77: p1("I"), M78: p2("E"), M79: p1("A"), M80: p1("L"),
+      M81: p1("D"), M82: p1("G"), M83: p2("K"), M84: p1("H"),
+      M85: p1("B"), M86: p1("J"), M87: p1("K"), M88: p2("D"),
+    };
+
+    // R16: pick slotA (teamA) as winner of each R16 match
+    const r16Choices: Record<string, string> = {
+      M89: p1("I"),  // W77
+      M90: p1("E"),  // W74
+      M91: p1("F"),  // W75
+      M92: p1("D"),  // W81
+      M93: p1("A"),  // W79
+      M94: p1("C"),  // W76
+      M95: p2("D"),  // W88
+      M96: p1("J"),  // W86
+    };
+
+    const state = resolveBracket(groupOrders, thirdPlaceRanking, {
+      ...r32Choices,
+      ...r16Choices,
+    });
+    const m = state.matches;
+
+    // M97 = W89 vs W90
+    expect(m["M97"].teamA).toBe(p1("I"));   // W89
+    expect(m["M97"].teamB).toBe(p1("E"));   // W90
+
+    // M98 = W93 vs W94
+    expect(m["M98"].teamA).toBe(p1("A"));   // W93
+    expect(m["M98"].teamB).toBe(p1("C"));   // W94
+
+    // M99 = W91 vs W92
+    expect(m["M99"].teamA).toBe(p1("F"));   // W91
+    expect(m["M99"].teamB).toBe(p1("D"));   // W92
+
+    // M100 = W95 vs W96
+    expect(m["M100"].teamA).toBe(p2("D"));  // W95
+    expect(m["M100"].teamB).toBe(p1("J"));  // W96
   });
 });
 
