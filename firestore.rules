@@ -93,5 +93,10 @@ service cloud.firestore {
       allow read: if signedIn();
       allow write: if false; // all writes go through Admin SDK (API routes)
     }
+
+    match /tournamentResults/{id} {
+      allow read: if signedIn();
+      allow write: if false; // all writes go through Admin SDK (API routes)
+    }
   }
 }

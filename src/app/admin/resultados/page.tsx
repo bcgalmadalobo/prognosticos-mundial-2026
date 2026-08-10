@@ -5,7 +5,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { Protected } from "@/components/Protected";
 import { auth } from "@/lib/firebase";
-import { getTournamentResults, saveTournamentResults } from "@/lib/db";
+import { getTournamentResults } from "@/lib/db";
 import type { TournamentResults } from "@/types";
 
 const GROUP_IDS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
@@ -83,39 +83,72 @@ export default function ResultadosPage() {
     setError("");
     setRecalcResult(null);
 
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) throw new Error("Não autenticado.");
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setError("Não autenticado. Faz login novamente.");
+      setSaveBusy(false);
+      return;
+    }
 
-      const groupPositions: Record<string, string[]> = {};
-      for (const g of GROUP_IDS) {
-        const parsed = parseList(groups[g]);
-        if (parsed.length > 0) groupPositions[g] = parsed;
+    const groupPositions: Record<string, string[]> = {};
+    for (const g of GROUP_IDS) {
+      const parsed = parseList(groups[g]);
+      if (parsed.length > 0) groupPositions[g] = parsed;
+    }
+
+    const results: TournamentResults = {
+      groupPositions,
+      roundOf32Teams: parseList(roundOf32),
+      roundOf16Teams: parseList(roundOf16),
+      quarterFinalTeams: parseList(quarterFinal),
+      semiFinalTeams: parseList(semiFinal),
+      finalTeams: parseList(finalTeams),
+      winner: winner.trim() || undefined,
+      runnerUp: runnerUp.trim() || undefined,
+      thirdPlace: thirdPlace.trim() || undefined,
+      fourthPlace: fourthPlace.trim() || undefined,
+      topScorer: topScorer.trim() || undefined,
+      bestPlayer: bestPlayer.trim() || undefined,
+      bestYoungPlayer: bestYoungPlayer.trim() || undefined,
+      bestGoalkeeper: bestGoalkeeper.trim() || undefined,
+    };
+
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch("/api/admin/tournament-results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(results),
+      });
+
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok) {
+        console.error("[resultados] API error", {
+          status: res.status,
+          error: data.error,
+          uid: currentUser.uid,
+          email: currentUser.email,
+          payload: results,
+        });
+        throw new Error(data.error ?? `HTTP ${res.status}`);
       }
 
-      const results: TournamentResults = {
-        groupPositions,
-        roundOf32Teams: parseList(roundOf32),
-        roundOf16Teams: parseList(roundOf16),
-        quarterFinalTeams: parseList(quarterFinal),
-        semiFinalTeams: parseList(semiFinal),
-        finalTeams: parseList(finalTeams),
-        winner: winner.trim() || undefined,
-        runnerUp: runnerUp.trim() || undefined,
-        thirdPlace: thirdPlace.trim() || undefined,
-        fourthPlace: fourthPlace.trim() || undefined,
-        topScorer: topScorer.trim() || undefined,
-        bestPlayer: bestPlayer.trim() || undefined,
-        bestYoungPlayer: bestYoungPlayer.trim() || undefined,
-        bestGoalkeeper: bestGoalkeeper.trim() || undefined,
-        updatedBy: currentUser.uid,
-      };
-
-      await saveTournamentResults(results);
       setMessage("Resultados guardados com sucesso.");
     } catch (err) {
-      console.error(err);
-      setError("Erro ao guardar resultados. Confirma se és admin e se as regras do Firestore foram publicadas.");
+      const code = (err as { code?: string }).code;
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("[resultados] Erro ao guardar:", {
+        code,
+        message,
+        path: "tournamentResults/main",
+        uid: currentUser.uid,
+        email: currentUser.email,
+        payload: results,
+      });
+      setError(`Erro ao guardar resultados: ${message}`);
     } finally {
       setSaveBusy(false);
     }
